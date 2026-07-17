@@ -98,6 +98,66 @@
 }
 
 /* Hai chip lương chính */
+
+.salary-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.salary-visibility-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(67, 56, 202, 0.1);
+    color: #4338ca;
+    box-shadow: 0 4px 12px rgba(67,56,202,0.12);
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    flex-shrink: 0;
+}
+
+.salary-visibility-button.on-primary {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    box-shadow: none;
+}
+
+.salary-visibility-button:hover {
+    background: rgba(67, 56, 202, 0.16);
+    box-shadow: 0 6px 14px rgba(67,56,202,0.18);
+    transform: translateY(-1px);
+}
+
+.salary-visibility-button.on-primary:hover {
+    background: rgba(255, 255, 255, 0.24);
+    box-shadow: none;
+}
+
+.salary-visibility-button:active {
+    transform: translateY(0);
+}
+
+.salary-visibility-button:focus-visible {
+    outline: 2px solid rgba(67, 56, 202, 0.35);
+    outline-offset: 2px;
+}
+
+.salary-visibility-button.on-primary:focus-visible {
+    outline-color: rgba(255, 255, 255, 0.7);
+}
+
+.salary-visibility-icon {
+    font-size: 14px;
+    line-height: 1;
+}
+
 .salary-row {
     display: grid;
     grid-template-columns: 1fr 1fr;

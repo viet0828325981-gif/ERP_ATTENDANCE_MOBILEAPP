@@ -58,12 +58,22 @@
         {
             <div class="salary-row">
                 <article class="salary-chip primary">
-                    <div class="salary-label">Lương cơ bản gốc</div>
-                    <div class="salary-value">@FormatMoney(Breakdown?.OriginalBasicSalary)</div>
+                    <div class="salary-label-row">
+                        <div class="salary-label">Lương cơ bản gốc</div>
+                        <button type="button"
+                                class="salary-visibility-button on-primary"
+                                @onclick="ToggleSalaryVisibility"
+                                aria-label="@(isSalaryVisible ? "Ẩn thông tin lương" : "Hiện thông tin lương")"
+                                aria-pressed="@isSalaryVisible"
+                                title="@(isSalaryVisible ? "Ẩn thông tin lương" : "Hiện thông tin lương")">
+                            <span class="salary-visibility-icon" aria-hidden="true">👁</span>
+                        </button>
+                    </div>
+                    <div class="salary-value">@DisplayMoney(Breakdown?.OriginalBasicSalary)</div>
                 </article>
                 <article class="salary-chip secondary">
-                    <div class="salary-label">Payroll tháng này</div>
-                    <div class="salary-value">@FormatMoney(Breakdown?.BasicSalary)</div>
+                    <div class="salary-label">Lương cơ bản tháng này</div>
+                    <div class="salary-value">@DisplayMoney(Breakdown?.BasicSalary)</div>
                 </article>
             </div>
 
@@ -360,6 +370,7 @@
         set => State.ShowShiftDetail = value;
     }
 
+    private bool isSalaryVisible;
     private decimal StandardDays => Breakdown?.StandardDays ?? 0m;
     private decimal ActualWorkDays => Breakdown?.ActualWorkDays ?? 0m;
     private decimal PaidLeaveTotal => (Breakdown?.PaidLeaveDays ?? 0m) + (Breakdown?.EventPaidLeaveDays ?? 0m);
@@ -553,6 +564,11 @@
         showShiftDetail = false;
     }
 
+    private void ToggleSalaryVisibility()
+    {
+        isSalaryVisible = !isSalaryVisible;
+    }
+
     private async Task RefreshDataAsync()
     {
         if (isLoading || isSyncing)
@@ -608,6 +624,11 @@
     {
         var degree = Math.Clamp(value, 0m, 100m) * 3.6m;
         return $"background: conic-gradient(#55b987 0deg {degree.ToString("0.##", CultureInfo.InvariantCulture)}deg, #d8f1df {degree.ToString("0.##", CultureInfo.InvariantCulture)}deg 360deg);";
+    }
+
+    private string DisplayMoney(decimal? value)
+    {
+        return isSalaryVisible ? FormatMoney(value) : "XXXXXXXXX";
     }
 
     private static string FormatMoney(decimal? value)
