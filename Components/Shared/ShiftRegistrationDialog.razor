@@ -1,0 +1,236 @@
+@using System.Globalization
+@inject ShiftcodeApiClient ShiftcodeApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog Class="shift-registration-dialog">
+    <TitleContent>
+        <MudText Typo="Typo.h5">Đăng ký ca làm việc</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudSelect T="ShiftRegistrationMode" Label="Hình thức đăng ký" Variant="Variant.Outlined" @bind-Value="registrationMode">
+                <MudSelectItem Value="@ShiftRegistrationMode.Week">Đăng ký từng ngày trong tuần</MudSelectItem>
+                <MudSelectItem Value="@ShiftRegistrationMode.Month">Đăng ký theo tháng</MudSelectItem>
+            </MudSelect>
+
+            @if (registrationMode == ShiftRegistrationMode.Week)
+            {
+                <MudDatePicker Label="Tuần đăng ký"
+                               Variant="Variant.Outlined"
+                               Date="@WeekStartDateTime"
+                               DateChanged="OnWeekDateChanged"
+                               HelperText="Chỉ được chọn ngày Thứ 2 của tuần cần đăng ký."
+                               DateFormat="dd/MM/yyyy"
+                               Editable="false"
+                               PickerVariant="PickerVariant.Dialog"
+                               DisableToolbar="true"
+                               IsDateDisabledFunc="IsWeekDateDisabled" />
+
+                <MudText Typo="Typo.subtitle1">Chọn ca cho từng ngày</MudText>
+                <MudGrid>
+                    @foreach (var day in weekShiftSelections)
+                    {
+                        <MudItem xs="12" sm="6" md="4" lg="3">
+                            <MudSelect T="string" Label="@day.Label" Variant="Variant.Outlined" Clearable="true" @bind-Value="day.Value">
+                                @foreach (var option in ShiftOptions)
+                                {
+                                    <MudSelectItem Value="@option.Code">@option.Code - @option.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Class="mb-n2">Đăng ký 1 mã ca cho toàn bộ tháng @SelectedMonth.ToString("MM/yyyy", CultureInfo.InvariantCulture).</MudText>
+                <MudSelect T="string" Label="Mã ca đăng ký tháng" Variant="Variant.Outlined" @bind-Value="monthShiftCode">
+                    @foreach (var option in ShiftOptions)
+                    {
+                        <MudSelectItem Value="@option.Code">@option.Code - @option.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+
+            <MudTextField T="string"
+                          Label="Ghi chú"
+                          Variant="Variant.Outlined"
+                          Lines="3"
+                          AutoGrow="true"
+                          @bind-Value="note" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Cancel">Hủy</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync" Disabled="@isSaving">
+            @(isSaving ? "Đang lưu" : "Lưu đăng ký")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly List<WeekShiftSelection> weekShiftSelections =
+    [
+        new("Thứ 2"),
+        new("Thứ 3"),
+        new("Thứ 4"),
+        new("Thứ 5"),
+        new("Thứ 6"),
+        new("Thứ 7"),
+        new("Chủ nhật")
+    ];
+
+    private ShiftRegistrationMode registrationMode = ShiftRegistrationMode.Week;
+    private DateOnly weekStartDate;
+    private string? monthShiftCode;
+    private string? note;
+    private bool isSaving;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid CompanyId { get; set; }
+
+    [Parameter]
+    public string EmployeeId { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CreatedBy { get; set; } = string.Empty;
+
+    [Parameter]
+    public DateOnly SelectedMonth { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<ShiftDefinition> ShiftOptions { get; set; } = Array.Empty<ShiftDefinition>();
+
+    private DateTime WeekStartDateTime => weekStartDate.ToDateTime(TimeOnly.MinValue);
+
+    protected override void OnInitialized()
+    {
+        weekStartDate = GetWeekStartDate();
+    }
+
+    private DateOnly GetWeekStartDate()
+    {
+        var preferredDate = SelectedMonth.Month == DateTime.Today.Month && SelectedMonth.Year == DateTime.Today.Year
+            ? DateOnly.FromDateTime(DateTime.Today)
+            : new DateOnly(SelectedMonth.Year, SelectedMonth.Month, 1);
+
+        return GetMonday(preferredDate);
+    }
+
+    private Task OnWeekDateChanged(DateTime? value)
+    {
+        weekStartDate = value is null
+            ? GetWeekStartDate()
+            : GetMonday(DateOnly.FromDateTime(value.Value));
+
+        return Task.CompletedTask;
+    }
+
+    private bool IsWeekDateDisabled(DateTime date)
+    {
+        return date.DayOfWeek != DayOfWeek.Monday;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(EmployeeId))
+        {
+            Snackbar.Add("Không tìm thấy employeeId để đăng ký ca.", Severity.Error);
+            return;
+        }
+
+        if (registrationMode == ShiftRegistrationMode.Month && string.IsNullOrWhiteSpace(monthShiftCode))
+        {
+            Snackbar.Add("Vui lòng chọn mã ca cho đăng ký theo tháng.", Severity.Warning);
+            return;
+        }
+
+        if (registrationMode == ShiftRegistrationMode.Week && weekShiftSelections.All(item => string.IsNullOrWhiteSpace(item.Value)))
+        {
+            Snackbar.Add("Vui lòng chọn ít nhất một ca trong tuần.", Severity.Warning);
+            return;
+        }
+
+        var request = BuildRequest();
+        isSaving = true;
+
+        try
+        {
+            if (registrationMode == ShiftRegistrationMode.Week)
+            {
+                await ShiftcodeApiClient.PostShiftRegistrationByWeek(request, CompanyId);
+            }
+            else
+            {
+                await ShiftcodeApiClient.PostShiftRegistrationByMonth(request, CompanyId);
+            }
+
+            Snackbar.Add("Đăng ký ca thành công.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private ShiftRegistrationCreateModel BuildRequest()
+    {
+        var request = new ShiftRegistrationCreateModel
+        {
+            EmployeeId = EmployeeId,
+            CreatedBy = string.IsNullOrWhiteSpace(CreatedBy) ? EmployeeId : CreatedBy,
+            WeekStartDate = registrationMode == ShiftRegistrationMode.Week
+                ? weekStartDate
+                : new DateOnly(SelectedMonth.Year, SelectedMonth.Month, 1),
+            Note = note
+        };
+
+        if (registrationMode == ShiftRegistrationMode.Week)
+        {
+            request.MonShiftCode = weekShiftSelections[0].Value;
+            request.TueShiftCode = weekShiftSelections[1].Value;
+            request.WedShiftCode = weekShiftSelections[2].Value;
+            request.ThuShiftCode = weekShiftSelections[3].Value;
+            request.FriShiftCode = weekShiftSelections[4].Value;
+            request.SatShiftCode = weekShiftSelections[5].Value;
+            request.SunShiftCode = weekShiftSelections[6].Value;
+        }
+        else
+        {
+            request.MonShiftCode = monthShiftCode;
+            request.TueShiftCode = monthShiftCode;
+            request.WedShiftCode = monthShiftCode;
+            request.ThuShiftCode = monthShiftCode;
+            request.FriShiftCode = monthShiftCode;
+            request.SatShiftCode = monthShiftCode;
+            request.SunShiftCode = monthShiftCode;
+        }
+
+        return request;
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private static DateOnly GetMonday(DateOnly date)
+    {
+        var diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        return date.AddDays(-diff);
+    }
+
+    private sealed class WeekShiftSelection(string label)
+    {
+        public string Label { get; } = label;
+        public string? Value { get; set; }
+    }
+}

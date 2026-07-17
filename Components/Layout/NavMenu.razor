@@ -1,0 +1,107 @@
+﻿@implements IDisposable
+@using Microsoft.AspNetCore.Components.Authorization
+@inject MoonAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject ERP_PAYROLLMOBILE.Services.RoleScope.IRoleScopeService RoleScopeService
+
+<header class="topbar app-topbar">
+    <a class="brand" href="">ERP_EMPLOYEE</a>
+
+    <div class="right">
+        <div class="bell-wrap">
+            <svg class="bell" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+                <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.7 21a2 2 0 01-3.4 0" />
+            </svg>
+            <span class="badge">8</span>
+        </div>
+        <button type="button" class="logout" @onclick="Logout">Đăng xuất</button>
+    </div>
+</header>
+
+<nav class="bottom-nav @(canUseManagerMenu ? "bottom-nav-manager" : string.Empty)" aria-label="Employee menu">
+    <div class="bottom-nav-track">
+        @foreach (var item in NavItems)
+        {
+            <NavLink class="nav-item" href="@item.Href" Match="@item.Match">
+                <span class="nav-item-text">@item.Label</span>
+            </NavLink>
+        }
+    </div>
+</nav>
+
+@code {
+    private bool canUseManagerMenu;
+    private string attendanceHref = "/employee/daily";
+
+    private IReadOnlyList<(string Label, string Href, NavLinkMatch Match)> NavItems =>
+        canUseManagerMenu
+            ?
+            [
+                ("Chấm công", attendanceHref, NavLinkMatch.All),
+                ("QL công", "/manager/daily", NavLinkMatch.Prefix),
+                ("QL yêu cầu", "/manager/requests", NavLinkMatch.Prefix),
+                ("QL ca", "/manager/shift", NavLinkMatch.Prefix)
+            ]
+            :
+            [
+                ("Chấm công", attendanceHref, NavLinkMatch.Prefix),
+                ("Yêu cầu", "/yeu-cau", NavLinkMatch.Prefix),
+                ("Đăng ký ca", "/dang-ky-ca", NavLinkMatch.Prefix),
+                ("Lương cơ bản", "/luong-co-ban", NavLinkMatch.Prefix)
+            ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        RoleScopeService.Changed += OnRoleScopeChanged;
+
+        if (RoleScopeService.Current.IsLoaded)
+        {
+            ApplyScope(RoleScopeService.Current);
+        }
+        else
+        {
+            await RefreshNavigationAsync();
+        }
+    }
+
+    private async Task RefreshNavigationAsync()
+    {
+        var scope = RoleScopeService.Current.IsLoaded
+            ? RoleScopeService.Current
+            : await RoleScopeService.LoadAsync();
+
+        ApplyScope(scope);
+    }
+
+    private void OnRoleScopeChanged()
+    {
+        _ = InvokeAsync(RefreshNavigationAsync);
+    }
+
+    private void ApplyScope(ERP_PAYROLLMOBILE.Services.RoleScope.RoleScopeState scope)
+    {
+        var nextCanUseManagerMenu = scope.CanUseManagerScope;
+        var nextAttendanceHref = nextCanUseManagerMenu ? "/manager/daily" : "/employee/daily";
+
+        if (canUseManagerMenu == nextCanUseManagerMenu && string.Equals(attendanceHref, nextAttendanceHref, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        canUseManagerMenu = nextCanUseManagerMenu;
+        attendanceHref = nextAttendanceHref;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void Logout()
+    {
+        AuthStateProvider.SignOut();
+        Navigation.NavigateTo("/login", replace: true);
+    }
+
+    public void Dispose()
+    {
+        RoleScopeService.Changed -= OnRoleScopeChanged;
+    }
+}

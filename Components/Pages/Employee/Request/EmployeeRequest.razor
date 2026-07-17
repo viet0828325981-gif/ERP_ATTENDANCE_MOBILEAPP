@@ -1,0 +1,1074 @@
+﻿@page "/yeu-cau"
+@implements IDisposable
+
+@using System.Globalization
+@using ERP_PAYROLLMOBILE.Models
+@using ERP_PAYROLLMOBILE.Models.EmployeeRequest
+@using ERP_PAYROLLMOBILE.RequestBuilders
+@using ERP_PAYROLLMOBILE.Services.Features.Requests
+@using ERP_PAYROLLMOBILE.Services.RoleScope
+@using ERP_PAYROLLMOBILE.Services.Ui
+@inject EmployeeRequestApiClient EmployeeRequestApiClient
+@inject EmployeeRequestRequestBuilder RequestBuilder
+@inject EmployeeRequestStateService State
+@inject PullToRefreshService PullToRefreshService
+@inject ISnackbar Snackbar
+@inject MoonAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Yêu cầu công</PageTitle>
+
+<RoleGuard AllowedRole="@ERP_PAYROLLMOBILE.Services.RoleScope.AppRole.Employee">
+<section class="employee-request-page">
+    <div class="request-page-content">
+        <div class="request-intro-row">
+            <p class="request-intro-text">Tạo mới, theo dõi và quản lý các yêu cầu của bạn.</p>
+
+            <button type="button" class="request-primary-button" @onclick="OpenCreateModal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+                <span>Tạo yêu cầu</span>
+            </button>
+        </div>
+
+        <div class="request-filters">
+            <div class="filter-field">
+                <label>Tháng</label>
+                <select value="@selectedMonth.Month" @onchange="OnMonthChangedAsync">
+                    @for (var month = 1; month <= 12; month++)
+                    {
+                        <option value="@month">Tháng @month</option>
+                    }
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Năm</label>
+                <input type="number" min="2000" max="2100" value="@selectedMonth.Year" @onchange="OnYearChangedAsync" />
+            </div>
+            <div class="filter-field">
+                <label>Loại yêu cầu</label>
+                <select value="@selectedRequestType" @onchange="OnRequestTypeChangedAsync">
+                    <option value="">Tất cả</option>
+                    @foreach (var type in RequestTypes)
+                    {
+                        <option value="@type.RequestType">@type.RequestName</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="request-alert">@errorMessage</div>
+        }
+
+        @if (isLoading)
+        {
+            <div class="request-empty">Đang tải dữ liệu yêu cầu công...</div>
+        }
+        else if (Requests.Count == 0)
+        {
+            <div class="request-empty">Không có yêu cầu công trong kỳ đã chọn.</div>
+        }
+        else
+        {
+            <ul class="request-list">
+                @foreach (var request in Requests)
+                {
+                    <li class="request-card @(expandedRequestId == request.Id ? "open" : null)">
+                        <button type="button" class="request-summary" @onclick="() => ToggleRequest(request.Id)">
+                            <span class="request-icon @GetRequestIconCssClass(request.RequestType)" aria-hidden="true">
+                                @switch (GetRequestIconKey(request.RequestType))
+                                {
+                                    case "clock-check":
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="7" />
+                                            <path d="M12 9v3l2 2M16.5 5.5l1-1M7.5 5.5l-1-1M16 16l2 2 4-4" />
+                                        </svg>
+                                        break;
+                                    case "calendar-week":
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="4" width="18" height="17" rx="2" />
+                                            <path d="M16 2v4M8 2v4M3 10h18M7 14h3M14 14h3M7 18h3" />
+                                        </svg>
+                                        break;
+                                    case "gift":
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M20 12v8H4v-8M2 7h20v5H2z" />
+                                            <path d="M12 7v13M12 7H8.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zm0 0h3.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z" />
+                                        </svg>
+                                        break;
+                                    case "device-laptop":
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="4" y="5" width="16" height="11" rx="1.5" />
+                                            <path d="M2 19h20" />
+                                        </svg>
+                                        break;
+                                    case "cloud":
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M7 18a4 4 0 1 1 .6-7.96A5 5 0 0 1 17 8a4 4 0 1 1 0 8H7z" />
+                                        </svg>
+                                        break;
+                                    case "clock-plus":
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="13" r="7" />
+                                            <path d="M12 10v3l2 2M19 5v4M17 7h4" />
+                                        </svg>
+                                        break;
+                                    case "alarm-off":
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M5 5l14 14M9 4 6 7M15 4l3 3" />
+                                            <path d="M9.5 9.5A4 4 0 0 1 16 13v4H8v-4a4 4 0 0 1 .3-1.5" />
+                                            <path d="M10 21h4" />
+                                        </svg>
+                                        break;
+                                    default:
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 18h.01" />
+                                            <path d="M9 16a4 4 0 0 1 6 0" />
+                                            <path d="M6 13a8 8 0 0 1 12 0" />
+                                            <path d="M3 10a12 12 0 0 1 18 0" />
+                                        </svg>
+                                        break;
+                                }
+                            </span>
+                            <span class="request-info">
+                                <span class="request-title">@GetRequestTypeLabel(request.RequestType)</span>
+                                <span class="request-date">@request.TargetDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</span>
+                            </span>
+                            <span class="status-badge @GetStatusBadgeClass(request.Status)">@GetStatusText(request.Status)</span>
+                            <span class="expand-btn" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </span>
+                        </button>
+
+                        <div class="request-details">
+                        <div class="request-detail-row"><span class="request-detail-label">Nhân viên</span><span class="request-detail-value">@(string.IsNullOrWhiteSpace(request.FullName) ? request.EmployeeId : request.FullName)</span></div>
+                        <div class="request-detail-row"><span class="request-detail-label">Ngày thực hiện</span><span class="request-detail-value">@(request.SourceDate?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? "-")</span></div>
+                        <div class="request-detail-row"><span class="request-detail-label">Số phút</span><span class="request-detail-value">@(request.MinutesAffected == 0 ? "-" : request.MinutesAffected.ToString(CultureInfo.InvariantCulture))</span></div>
+                        <div class="request-detail-row"><span class="request-detail-label">Phút xác nhận</span><span class="request-detail-value">@request.ConfirmedMinutes</span></div>
+                        <div class="request-detail-row"><span class="request-detail-label">WorkType</span><span class="request-detail-value">@(request.WorkType ?? "-")</span></div>
+                        <div class="request-detail-row"><span class="request-detail-label">Người tạo</span><span class="request-detail-value">@GetCreatedLabel(request)</span></div>
+                        <div class="request-detail-row"><span class="request-detail-label">Ngày tạo</span><span class="request-detail-value">@request.CreatedAt.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)</span></div>
+                        <div class="request-detail-row"><span class="request-detail-label">Người duyệt</span><span class="request-detail-value">@(request.ApprovedBy ?? "-")</span></div>
+                        <div class="request-detail-row">
+                            <span class="request-detail-label">Nhóm</span>
+                            @if (request.IsGroupedOnline)
+                            {
+                                <button type="button" class="link-button" @onclick:stopPropagation="true" @onclick="() => OpenGroupDetailAsync(request)">Xem nhóm</button>
+                            }
+                            else
+                            {
+                                <span class="request-detail-value">-</span>
+                            }
+                        </div>
+                        <div class="request-detail-row">
+                            <span class="request-detail-label">Hủy</span>
+                            <button type="button" class="btn-cancel" @onclick:stopPropagation="true" @onclick="() => CancelRequestAsync(request)" disabled="@(request.Status != 0 || (isCancelling && cancellingRequestId == request.Id))">
+                                @(isCancelling && cancellingRequestId == request.Id ? "ĐANG HỦY" : "HỦY")
+                            </button>
+                        </div>
+                        <div class="reason-box inline-reason">
+                            <span>Lý do</span>
+                            <p>@(string.IsNullOrWhiteSpace(request.Reason) ? "-" : request.Reason)</p>
+                        </div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <AppBottomNav ActiveTab="Yêu cầu" OnTabChanged="HandleTabChange" />
+</section>
+</RoleGuard>
+
+@if (showGroupDetailModal)
+{
+    <div class="request-modal-backdrop" @onclick="CloseGroupDetail">
+        <div class="request-modal large" @onclick:stopPropagation="true">
+            <div class="request-modal-header">
+                <div>
+                    <h2>Chi tiết nhóm online</h2>
+                    <p>@groupDetailTitle</p>
+                </div>
+                <button type="button" class="close-button" @onclick="CloseGroupDetail">✕</button>
+            </div>
+
+            @if (isGroupLoading)
+            {
+                <div class="request-empty">Đang tải chi tiết nhóm online...</div>
+            }
+            else if (!string.IsNullOrWhiteSpace(groupDetailErrorMessage))
+            {
+                <div class="request-alert">@groupDetailErrorMessage</div>
+            }
+            else if (GroupRequests.Count == 0)
+            {
+                <div class="request-empty">Không có dữ liệu nhóm online.</div>
+            }
+            else
+            {
+                <div class="request-table compact-table">
+                    <div class="request-table-head compact-group-header">
+                        <span>Ngày</span>
+                        <span>Loại</span>
+                        <span>Shift</span>
+                        <span>Trạng thái</span>
+                        <span>Lý do</span>
+                    </div>
+                    @foreach (var item in GroupRequests)
+                    {
+                        <div class="request-table-row compact-group-row">
+                            <div>@item.TargetDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</div>
+                            <div>@GetRequestTypeLabel(item.RequestType)</div>
+                            <div>@(item.ShiftCode ?? "-")</div>
+                            <div>@GetStatusText(item.Status)</div>
+                            <div>@(item.Reason ?? "-")</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (showCreateModal)
+{
+    <div class="request-modal-backdrop" @onclick="CloseCreateModal">
+        <div class="request-modal large" @onclick:stopPropagation="true">
+            <div class="request-modal-header">
+                <div>
+                    <h2>Tạo yêu cầu mới</h2>
+                    <p>@GetCreateRequestTitle()</p>
+                </div>
+                <button type="button" class="close-button" @onclick="CloseCreateModal">✕</button>
+            </div>
+
+            <div class="create-form-grid">
+                <label class="form-field full-width">
+                    <span>Loại yêu cầu</span>
+                    <select value="@createRequestType" @onchange="OnCreateRequestTypeChangedAsync">
+                        @foreach (var type in CreatableRequestTypes)
+                        {
+                            <option value="@type.RequestType">@type.RequestName</option>
+                        }
+                    </select>
+                </label>
+
+                @* The create form changes by request type so only the fields required by the selected backend workflow are shown. *@
+                @if (createRequestType == "FORGOT_CHECK")
+                {
+                    <label class="form-field">
+                        <span>Ngày quên chấm công</span>
+                        <input type="date" value="@ToDateInput(formTargetDate)" @onchange="OnTargetDateChanged" />
+                    </label>
+                }
+                else if (createRequestType == "MAKEUP_HOUR")
+                {
+                    <label class="form-field">
+                        <span>Ngày cần bù</span>
+                        <input type="date" value="@ToDateInput(formTargetDate)" @onchange="OnTargetDateChanged" />
+                    </label>
+                    <label class="form-field">
+                        <span>Ngày bù công</span>
+                        <input type="date" value="@ToDateInput(formSourceDate)" @onchange="OnSourceDateChanged" />
+                    </label>
+                    <label class="form-field">
+                        <span>Số phút</span>
+                        <input type="number" min="1" value="@formMinutesAffected" @onchange="OnMinutesChanged" />
+                    </label>
+                }
+                else if (createRequestType == "WORK_OVERTIME")
+                {
+                    <label class="form-field">
+                        <span>Ngày OT</span>
+                        <input type="date" value="@ToDateInput(formSourceDate)" @onchange="OnSourceDateChanged" />
+                    </label>
+                    <label class="form-field">
+                        <span>Số phút OT</span>
+                        <input type="number" min="1" value="@formMinutesAffected" @onchange="OnMinutesChanged" />
+                    </label>
+                }
+                else if (createRequestType is "WORK_HOLIDAY" or "WORK_WEEKEND")
+                {
+                    <label class="form-field full-width">
+                        <span>Chọn ngày</span>
+                        <select value="@ToDateInput(formSourceDate)" @onchange="OnSourceDateChanged">
+                            @foreach (var item in CurrentSingleDateOptions)
+                            {
+                                <option value="@ToDateInput(item.WorkDate)">@item.WorkDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) - @item.Name</option>
+                            }
+                        </select>
+                    </label>
+                }
+                else if (createRequestType is "WORK_ONLINE" or "WORK_ONLINE_HOLIDAY" or "WORK_ONLINE_WEEKEND")
+                {
+                    <label class="form-field">
+                        <span>Ca online</span>
+                        <select value="@formShiftCode" @onchange="OnShiftCodeChanged">
+                            @foreach (var shift in OnlineShifts.Where(item => item.IsActive))
+                            {
+                                <option value="@shift.ShiftCode">@shift.ShiftCode - @shift.ShiftName</option>
+                            }
+                        </select>
+                    </label>
+                    <div class="form-field full-width">
+                        <span>Chọn ngày online</span>
+                        @* Online requests can cover multiple allowed dates, so the chips keep multi-select state visible inside the modal. *@
+                        <div class="date-chip-list">
+                            @foreach (var item in CurrentOnlineDateOptions)
+                            {
+                                <button type="button"
+                                        class="date-chip @(selectedOnlineDates.Contains(item.WorkDate) ? "selected" : null)"
+                                        @onclick="() => ToggleOnlineDate(item.WorkDate)">
+                                    <strong>@item.WorkDate.ToString("dd/MM", CultureInfo.InvariantCulture)</strong>
+                                    <small>@item.Name</small>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <label class="form-field full-width">
+                    <span>Lý do</span>
+                    <textarea rows="3" @bind="formReason"></textarea>
+                </label>
+            </div>
+
+            <div class="create-form-actions">
+                <button type="button" class="outline-button" @onclick="CloseCreateModal">Hủy</button>
+                <button type="button" class="primary-button" @onclick="SubmitCreateRequestAsync" disabled="@isSubmittingCreateRequest">
+                    @(isSubmittingCreateRequest ? "Đang gửi" : "Gửi yêu cầu")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private readonly Guid companyId = Guid.Parse("A2F3FB40-7FA2-F011-9DB7-208810C238D7");
+    private DateOnly selectedMonth
+    {
+        get => State.SelectedMonth;
+        set => State.SelectedMonth = value;
+    }
+
+    private string selectedRequestType
+    {
+        get => State.SelectedRequestType;
+        set => State.SelectedRequestType = value;
+    }
+
+    private List<EmployeeRequestTypeDto> RequestTypes
+    {
+        get => State.RequestTypes;
+        set => State.RequestTypes = value;
+    }
+
+    private List<WorkRequestModel> Requests
+    {
+        get => State.Requests;
+        set => State.Requests = value;
+    }
+
+    private List<ShiftModel> OnlineShifts
+    {
+        get => State.OnlineShifts;
+        set => State.OnlineShifts = value;
+    }
+
+    private List<DimCalendarModel> CalendarDays
+    {
+        get => State.CalendarDays;
+        set => State.CalendarDays = value;
+    }
+
+    private List<WorkRequestModel> GroupRequests
+    {
+        get => State.GroupRequests;
+        set => State.GroupRequests = value;
+    }
+
+    private string? errorMessage
+    {
+        get => State.ErrorMessage;
+        set => State.ErrorMessage = value;
+    }
+
+    private string? groupDetailErrorMessage
+    {
+        get => State.GroupDetailErrorMessage;
+        set => State.GroupDetailErrorMessage = value;
+    }
+
+    private string groupDetailTitle
+    {
+        get => State.GroupDetailTitle;
+        set => State.GroupDetailTitle = value;
+    }
+
+    private bool isLoading
+    {
+        get => State.IsLoading;
+        set => State.IsLoading = value;
+    }
+
+    private bool isGroupLoading
+    {
+        get => State.IsGroupLoading;
+        set => State.IsGroupLoading = value;
+    }
+
+    private bool isSubmittingCreateRequest
+    {
+        get => State.IsSubmittingCreateRequest;
+        set => State.IsSubmittingCreateRequest = value;
+    }
+
+    private bool isCancelling
+    {
+        get => State.IsCancelling;
+        set => State.IsCancelling = value;
+    }
+
+    private bool showGroupDetailModal
+    {
+        get => State.ShowGroupDetailModal;
+        set => State.ShowGroupDetailModal = value;
+    }
+
+    private bool showCreateModal
+    {
+        get => State.ShowCreateModal;
+        set => State.ShowCreateModal = value;
+    }
+
+    private Guid? cancellingRequestId
+    {
+        get => State.CancellingRequestId;
+        set => State.CancellingRequestId = value;
+    }
+
+    private Guid? expandedRequestId
+    {
+        get => State.ExpandedRequestId;
+        set => State.ExpandedRequestId = value;
+    }
+
+    private string createRequestType
+    {
+        get => State.CreateRequestType;
+        set => State.CreateRequestType = value;
+    }
+
+    private DateOnly formTargetDate
+    {
+        get => State.FormTargetDate;
+        set => State.FormTargetDate = value;
+    }
+
+    private DateOnly formSourceDate
+    {
+        get => State.FormSourceDate;
+        set => State.FormSourceDate = value;
+    }
+
+    private int formMinutesAffected
+    {
+        get => State.FormMinutesAffected;
+        set => State.FormMinutesAffected = value;
+    }
+
+    private string formShiftCode
+    {
+        get => State.FormShiftCode;
+        set => State.FormShiftCode = value;
+    }
+
+    private string? formReason
+    {
+        get => State.FormReason;
+        set => State.FormReason = value;
+    }
+
+    private HashSet<DateOnly> selectedOnlineDates
+    {
+        get => State.SelectedOnlineDates;
+        set => State.SelectedOnlineDates = value;
+    }
+
+    private IReadOnlyList<EmployeeRequestTypeDto> CreatableRequestTypes => RequestTypes
+        .Where(item => RequestBuilder.IsCreateSupported(item.RequestType))
+        .ToList();
+
+    private IReadOnlyList<DimCalendarModel> CurrentSingleDateOptions => GetSingleDateOptions(createRequestType);
+
+    private IReadOnlyList<DimCalendarModel> CurrentOnlineDateOptions => GetOnlineDateOptions(createRequestType);
+
+    protected override async Task OnInitializedAsync()
+    {
+        PullToRefreshService.RefreshRequested += OnPullToRefreshRequestedAsync;
+
+        if (!State.IsInitialized)
+        {
+            await ReloadAllAsync();
+        }
+    }
+
+    private Task HandleTabChange(string tab)
+    {
+        var route = tab switch
+        {
+            "Chấm công" => "/employee/daily",
+            "Yêu cầu" => "/yeu-cau",
+            "Đăng ký ca" => "/dang-ky-ca",
+            "Lương cơ bản" => "/luong-co-ban",
+            _ => "/employee/daily"
+        };
+
+        Navigation.NavigateTo(route);
+        return Task.CompletedTask;
+    }
+
+    private async Task ReloadAllAsync()
+    {
+        await LoadRequestTypesAsync();
+        await LoadReferenceDataAsync();
+        await LoadRequestsAsync();
+        State.IsInitialized = true;
+    }
+
+    private async Task LoadRequestTypesAsync()
+    {
+        try
+        {
+            var requestTypes = await EmployeeRequestApiClient.GetRequestTypesAsync();
+            RequestTypes = RequestBuilder.NormalizeRequestTypes(requestTypes);
+        }
+        catch (Exception ex)
+        {
+            RequestTypes = new List<EmployeeRequestTypeDto>();
+            Snackbar.Add($"Không tải được loại yêu cầu: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task LoadReferenceDataAsync()
+    {
+        try
+        {
+            OnlineShifts = await EmployeeRequestApiClient.GetOnlineShiftsAsync(companyId);
+        }
+        catch (Exception ex)
+        {
+            OnlineShifts = new List<ShiftModel>();
+            Snackbar.Add($"Không tải được danh sách ca online: {ex.Message}", Severity.Warning);
+        }
+
+        try
+        {
+            CalendarDays = await EmployeeRequestApiClient.GetCalendarAsync(RequestBuilder.BuildCalendarQuery(selectedMonth));
+        }
+        catch (Exception ex)
+        {
+            CalendarDays = new List<DimCalendarModel>();
+            Snackbar.Add($"Không tải được lịch tháng: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private async Task LoadRequestsAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var query = await RequestBuilder.BuildQueryAsync(companyId, selectedMonth, selectedRequestType, true);
+            if (string.IsNullOrWhiteSpace(query.EmployeeId))
+            {
+                throw new Exception("Không tìm thấy employeeId của người dùng hiện tại.");
+            }
+
+            Requests = (await EmployeeRequestApiClient.GetRequestsAsync(query))
+                .OrderByDescending(item => item.TargetDate)
+                .ThenByDescending(item => item.Id)
+                .ToList();
+
+            expandedRequestId = null;
+        }
+        catch (Exception ex)
+        {
+            Requests = new List<WorkRequestModel>();
+            expandedRequestId = null;
+            errorMessage = $"Không tải được dữ liệu yêu cầu công: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnMonthChangedAsync(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var month))
+        {
+            selectedMonth = new DateOnly(selectedMonth.Year, month, 1);
+            await LoadReferenceDataAsync();
+            await LoadRequestsAsync();
+        }
+    }
+
+    private async Task OnYearChangedAsync(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var year))
+        {
+            selectedMonth = new DateOnly(year, selectedMonth.Month, 1);
+            await LoadReferenceDataAsync();
+            await LoadRequestsAsync();
+        }
+    }
+
+    private async Task OnRequestTypeChangedAsync(ChangeEventArgs args)
+    {
+        selectedRequestType = args.Value?.ToString() ?? string.Empty;
+        await LoadRequestsAsync();
+    }
+
+    private void ToggleRequest(Guid requestId)
+    {
+        expandedRequestId = expandedRequestId == requestId ? null : requestId;
+    }
+
+    private async Task OpenGroupDetailAsync(WorkRequestModel request)
+    {
+        if (!request.IsGroupedOnline)
+        {
+            Snackbar.Add("Yêu cầu này không phải nhóm online.", Severity.Info);
+            return;
+        }
+
+        isGroupLoading = true;
+        showGroupDetailModal = true;
+        groupDetailErrorMessage = null;
+        groupDetailTitle = $"{GetRequestTypeLabel(request.RequestType)} - {request.CreatedAt:dd/MM/yyyy HH:mm}";
+        GroupRequests = new List<WorkRequestModel>();
+
+        try
+        {
+            var query = await RequestBuilder.BuildOnlineGroupDetailQueryAsync(companyId, request.RequestType, request.CreatedAt);
+            GroupRequests = await EmployeeRequestApiClient.GetOnlineGroupDetailAsync(query);
+        }
+        catch (Exception ex)
+        {
+            groupDetailErrorMessage = $"Không tải được chi tiết nhóm online: {ex.Message}";
+        }
+        finally
+        {
+            isGroupLoading = false;
+        }
+    }
+
+    private void CloseGroupDetail()
+    {
+        showGroupDetailModal = false;
+        isGroupLoading = false;
+        groupDetailErrorMessage = null;
+        groupDetailTitle = string.Empty;
+        GroupRequests = new List<WorkRequestModel>();
+    }
+
+    private void OpenCreateModal()
+    {
+        if (CreatableRequestTypes.Count == 0)
+        {
+            Snackbar.Add("Không có loại yêu cầu nào đang hỗ trợ tạo mới.", Severity.Info);
+            return;
+        }
+
+        showCreateModal = true;
+        createRequestType = string.IsNullOrWhiteSpace(createRequestType) || !RequestBuilder.IsCreateSupported(createRequestType)
+            ? CreatableRequestTypes[0].RequestType
+            : createRequestType;
+        ResetCreateForm();
+    }
+
+    private void CloseCreateModal()
+    {
+        showCreateModal = false;
+        isSubmittingCreateRequest = false;
+    }
+
+    private async Task OnCreateRequestTypeChangedAsync(ChangeEventArgs args)
+    {
+        createRequestType = args.Value?.ToString() ?? string.Empty;
+        ResetCreateForm();
+        await Task.CompletedTask;
+    }
+
+    private void ResetCreateForm()
+    {
+        var defaultDate = GetDefaultFormDate();
+        formTargetDate = defaultDate;
+        formSourceDate = defaultDate;
+        formMinutesAffected = 60;
+        formReason = null;
+        selectedOnlineDates = new HashSet<DateOnly>();
+        formShiftCode = OnlineShifts.FirstOrDefault(item => item.IsActive)?.ShiftCode
+            ?? OnlineShifts.FirstOrDefault()?.ShiftCode
+            ?? string.Empty;
+
+        var singleDateOption = CurrentSingleDateOptions.FirstOrDefault();
+        if (singleDateOption is not null)
+        {
+            formSourceDate = singleDateOption.WorkDate;
+        }
+    }
+
+    private DateOnly GetDefaultFormDate()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        return today.Year == selectedMonth.Year && today.Month == selectedMonth.Month
+            ? today
+            : new DateOnly(selectedMonth.Year, selectedMonth.Month, 1);
+    }
+
+    private async Task SubmitCreateRequestAsync()
+    {
+        if (!RequestBuilder.IsCreateSupported(createRequestType))
+        {
+            Snackbar.Add("Loại yêu cầu này chưa được hỗ trợ tạo mới.", Severity.Warning);
+            return;
+        }
+
+        isSubmittingCreateRequest = true;
+
+        try
+        {
+            var message = await SubmitByRequestTypeAsync();
+            Snackbar.Add(string.IsNullOrWhiteSpace(message) ? "Gửi yêu cầu thành công." : message, Severity.Success);
+            CloseCreateModal();
+            await LoadRequestsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            isSubmittingCreateRequest = false;
+        }
+    }
+
+    private async Task<string> SubmitByRequestTypeAsync()
+    {
+        return createRequestType switch
+        {
+            "FORGOT_CHECK" => await SubmitForgotCheckAsync(),
+            "MAKEUP_HOUR" => await SubmitMakeupHourAsync(),
+            "WORK_OVERTIME" => await SubmitWorkOvertimeAsync(),
+            "WORK_HOLIDAY" => await SubmitWorkHolidayAsync(),
+            "WORK_WEEKEND" => await SubmitWorkWeekendAsync(),
+            "WORK_ONLINE" => await SubmitWorkOnlineAsync(),
+            "WORK_ONLINE_HOLIDAY" => await SubmitWorkOnlineHolidayAsync(),
+            "WORK_ONLINE_WEEKEND" => await SubmitWorkOnlineWeekendAsync(),
+            _ => throw new Exception("Loại yêu cầu chưa hỗ trợ gửi từ mobile.")
+        };
+    }
+
+    private static string GetStatusBadgeClass(int status)
+    {
+        return status switch
+        {
+            1 => "status-success",
+            2 => "status-rejected",
+            3 => "status-cancelled",
+            _ => "status-pending"
+        };
+    }
+
+    private static string GetRequestIconCssClass(string requestType)
+    {
+        return requestType switch
+        {
+            "MAKEUP_HOUR" => "icon-teal",
+            "WORK_WEEKEND" => "icon-purple",
+            "WORK_HOLIDAY" => "icon-pink",
+            "WORK_ONLINE" => "icon-blue",
+            "WORK_ONLINE_WEEKEND" => "icon-blue",
+            "WORK_ONLINE_HOLIDAY" => "icon-indigo",
+            "WORK_OVERTIME" => "icon-amber",
+            "FORGOT_CHECK" => "icon-red",
+            _ => "icon-blue"
+        };
+    }
+
+    private static string GetRequestIconKey(string requestType)
+    {
+        return requestType switch
+        {
+            "MAKEUP_HOUR" => "clock-check",
+            "WORK_WEEKEND" => "calendar-week",
+            "WORK_HOLIDAY" => "gift",
+            "WORK_ONLINE" => "wifi",
+            "WORK_ONLINE_WEEKEND" => "device-laptop",
+            "WORK_ONLINE_HOLIDAY" => "cloud",
+            "WORK_OVERTIME" => "clock-plus",
+            "FORGOT_CHECK" => "alarm-off",
+            _ => "wifi"
+        };
+    }
+
+    private async Task<string> SubmitForgotCheckAsync()
+    {
+        var request = await RequestBuilder.BuildForgotCheckRequestAsync(formTargetDate, formReason);
+        return await EmployeeRequestApiClient.PostForgotCheckAsync(companyId, request);
+    }
+
+    private async Task<string> SubmitMakeupHourAsync()
+    {
+        if (formMinutesAffected <= 0)
+        {
+            throw new Exception("Số phút bù công phải lớn hơn 0.");
+        }
+
+        var request = await RequestBuilder.BuildMakeupHourRequestAsync(formTargetDate, formSourceDate, formMinutesAffected, formReason);
+        return await EmployeeRequestApiClient.PostMakeupHourAsync(companyId, request);
+    }
+
+    private async Task<string> SubmitWorkOvertimeAsync()
+    {
+        if (formMinutesAffected <= 0)
+        {
+            throw new Exception("Số phút OT phải lớn hơn 0.");
+        }
+
+        var request = await RequestBuilder.BuildOvertimeRequestAsync(formSourceDate, formMinutesAffected, formReason);
+        return await EmployeeRequestApiClient.PostWorkOvertimeAsync(companyId, request);
+    }
+
+    private async Task<string> SubmitWorkHolidayAsync()
+    {
+        var request = await RequestBuilder.BuildSpecialDayRequestAsync(formSourceDate, formReason);
+        return await EmployeeRequestApiClient.PostWorkHolidayAsync(companyId, request);
+    }
+
+    private async Task<string> SubmitWorkWeekendAsync()
+    {
+        var request = await RequestBuilder.BuildSpecialDayRequestAsync(formSourceDate, formReason);
+        return await EmployeeRequestApiClient.PostWorkWeekendAsync(companyId, request);
+    }
+
+    private async Task<string> SubmitWorkOnlineAsync()
+    {
+        ValidateOnlineForm();
+        var request = await RequestBuilder.BuildOnlineRequestAsync(selectedOnlineDates, formShiftCode, formReason);
+        return await EmployeeRequestApiClient.PostWorkOnlineAsync(companyId, request);
+    }
+
+    private async Task<string> SubmitWorkOnlineHolidayAsync()
+    {
+        ValidateOnlineForm();
+        var request = await RequestBuilder.BuildOnlineRequestAsync(selectedOnlineDates, formShiftCode, formReason);
+        return await EmployeeRequestApiClient.PostWorkOnlineHolidayAsync(companyId, request);
+    }
+
+    private async Task<string> SubmitWorkOnlineWeekendAsync()
+    {
+        ValidateOnlineForm();
+        var request = await RequestBuilder.BuildOnlineRequestAsync(selectedOnlineDates, formShiftCode, formReason);
+        return await EmployeeRequestApiClient.PostWorkOnlineWeekendAsync(companyId, request);
+    }
+
+    private void ValidateOnlineForm()
+    {
+        if (selectedOnlineDates.Count == 0)
+        {
+            throw new Exception("Vui lòng chọn ít nhất một ngày online.");
+        }
+
+        if (string.IsNullOrWhiteSpace(formShiftCode))
+        {
+            throw new Exception("Vui lòng chọn ca online.");
+        }
+    }
+
+    private async Task CancelRequestAsync(WorkRequestModel request)
+    {
+        if (request.Status != 0)
+        {
+            return;
+        }
+
+        isCancelling = true;
+        cancellingRequestId = request.Id;
+
+        try
+        {
+            string message;
+            if (request.IsGroupedOnline)
+            {
+                var cancelGroupRequest = await RequestBuilder.BuildCancelOnlineGroupRequestAsync(request.RequestType, request.CreatedAt);
+                message = await EmployeeRequestApiClient.CancelOnlineGroupAsync(companyId, cancelGroupRequest);
+            }
+            else
+            {
+                var cancelRequest = await RequestBuilder.BuildCancelRequestAsync(companyId, request.Id);
+                message = await EmployeeRequestApiClient.CancelAsync(cancelRequest);
+            }
+
+            Snackbar.Add(string.IsNullOrWhiteSpace(message) ? "Đã hủy yêu cầu thành công." : message, Severity.Success);
+            await LoadRequestsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Không hủy được yêu cầu: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isCancelling = false;
+            cancellingRequestId = null;
+        }
+    }
+
+    private static string GetStatusText(int status)
+    {
+        return status switch
+        {
+            0 => "Chờ duyệt",
+            1 => "Đã duyệt",
+            2 => "Từ chối",
+            3 => "Đã hủy",
+            _ => $"Trạng thái {status}"
+        };
+    }
+
+    private static string GetStatusClass(int status)
+    {
+        return status switch
+        {
+            1 => "approved",
+            2 => "rejected",
+            3 => "cancelled",
+            _ => "pending"
+        };
+    }
+
+    private static string GetCreatedLabel(WorkRequestModel request)
+    {
+        return string.IsNullOrWhiteSpace(request.CreatedBy) ? "-" : request.CreatedBy;
+    }
+
+    private IReadOnlyList<DimCalendarModel> GetSingleDateOptions(string requestType)
+    {
+        return requestType switch
+        {
+            "WORK_HOLIDAY" => CalendarDays.Where(item => item.PaidLeaveDays > 0).OrderBy(item => item.WorkDate).ToList(),
+            "WORK_WEEKEND" => CalendarDays.Where(IsWeekend).OrderBy(item => item.WorkDate).ToList(),
+            _ => CalendarDays.OrderBy(item => item.WorkDate).ToList()
+        };
+    }
+
+    private IReadOnlyList<DimCalendarModel> GetOnlineDateOptions(string requestType)
+    {
+        return requestType switch
+        {
+            "WORK_ONLINE_HOLIDAY" => CalendarDays.Where(item => item.PaidLeaveDays > 0).OrderBy(item => item.WorkDate).ToList(),
+            "WORK_ONLINE_WEEKEND" => CalendarDays.Where(IsWeekend).OrderBy(item => item.WorkDate).ToList(),
+            _ => CalendarDays.Where(item => !IsWeekend(item) && item.PaidLeaveDays <= 0).OrderBy(item => item.WorkDate).ToList()
+        };
+    }
+
+    private static bool IsWeekend(DimCalendarModel item)
+    {
+        return item.DayOfWeek is 6 or 7;
+    }
+
+    private void ToggleOnlineDate(DateOnly workDate)
+    {
+        if (!selectedOnlineDates.Add(workDate))
+        {
+            selectedOnlineDates.Remove(workDate);
+        }
+    }
+
+    private Task OnTargetDateChanged(ChangeEventArgs args)
+    {
+        formTargetDate = ParseDate(args.Value?.ToString(), formTargetDate);
+        return Task.CompletedTask;
+    }
+
+    private Task OnSourceDateChanged(ChangeEventArgs args)
+    {
+        formSourceDate = ParseDate(args.Value?.ToString(), formSourceDate);
+        return Task.CompletedTask;
+    }
+
+    private Task OnMinutesChanged(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+        {
+            formMinutesAffected = value;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnShiftCodeChanged(ChangeEventArgs args)
+    {
+        formShiftCode = args.Value?.ToString() ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private string GetCreateRequestTitle()
+    {
+        return string.IsNullOrWhiteSpace(createRequestType)
+            ? "Chọn loại yêu cầu để nhập thông tin"
+            : RequestBuilder.GetRequestTypeDisplayName(createRequestType, createRequestType);
+    }
+
+    private string GetRequestTypeLabel(string requestType)
+    {
+        return RequestBuilder.GetRequestTypeDisplayName(requestType, requestType);
+    }
+
+    private static string ToDateInput(DateOnly value)
+    {
+        return value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    }
+
+    private static DateOnly ParseDate(string? value, DateOnly fallback)
+    {
+        return DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
+            ? parsed
+            : fallback;
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        if (isLoading || isSubmittingCreateRequest || isCancelling || isGroupLoading)
+        {
+            return;
+        }
+
+        await ReloadAllAsync();
+    }
+
+    private async Task OnPullToRefreshRequestedAsync()
+    {
+        var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        if (!currentPath.StartsWith("yeu-cau", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        await InvokeAsync(RefreshDataAsync);
+    }
+
+    public void Dispose()
+    {
+        PullToRefreshService.RefreshRequested -= OnPullToRefreshRequestedAsync;
+    }
+}

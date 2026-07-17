@@ -1,0 +1,27 @@
+﻿@using System.Net.Http
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+@using MudBlazor
+@using ERP_PAYROLLMOBILE
+@using ERP_PAYROLLMOBILE.Api
+@using ERP_PAYROLLMOBILE.Api.EMPLOYEEROLE.EmployeeBreakdown
+@using ERP_PAYROLLMOBILE.Api.EMPLOYEEROLE.EmployeeDaily
+@using ERP_PAYROLLMOBILE.Api.EMPLOYEEROLE.EmployeeIShiftCode
+@using ERP_PAYROLLMOBILE.Api.EMPLOYEEROLE.EmployeeRequest
+@using ERP_PAYROLLMOBILE.Api.MANAGERROLE
+@using ERP_PAYROLLMOBILE.Models
+@using ERP_PAYROLLMOBILE.RequestBuilders
+@using ERP_PAYROLLMOBILE.Components
+@using ERP_PAYROLLMOBILE.Components.Shared
+@using ERP_PAYROLLMOBILE.Components.Shared.Role
+@using ERP_PAYROLLMOBILE.Components.Features.Daily.Actions
+@using ERP_PAYROLLMOBILE.Components.Features.Requests.Actions
+@using ERP_PAYROLLMOBILE.Components.Features.Shift.Actions
+
+@attribute [Authorize]

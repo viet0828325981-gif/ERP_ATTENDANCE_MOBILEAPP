@@ -1,0 +1,66 @@
+@using System.Globalization
+@using ERP_PAYROLLMOBILE.Models.ManagerRole.ManagerShift
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="2">
+            <div>
+                <MudText Typo="Typo.h6">@DepartmentName</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Tuần @WeekStartDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) - @WeekStartDate.AddDays(6).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)
+                </MudText>
+            </div>
+
+            @if (Rows.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info">Chưa có dữ liệu bảng lịch ca cho tuần đã chọn.</MudAlert>
+            }
+            else
+            {
+                <MudTable Items="Rows" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.Md">
+                    <HeaderContent>
+                        <MudTh>Nhân viên</MudTh>
+                        <MudTh>T2</MudTh>
+                        <MudTh>T3</MudTh>
+                        <MudTh>T4</MudTh>
+                        <MudTh>T5</MudTh>
+                        <MudTh>T6</MudTh>
+                        <MudTh>T7</MudTh>
+                        <MudTh>CN</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Nhân viên">@context.EmployeeName</MudTd>
+                        <MudTd DataLabel="T2">@FormatShift(context.MonShiftCode)</MudTd>
+                        <MudTd DataLabel="T3">@FormatShift(context.TueShiftCode)</MudTd>
+                        <MudTd DataLabel="T4">@FormatShift(context.WedShiftCode)</MudTd>
+                        <MudTd DataLabel="T5">@FormatShift(context.ThuShiftCode)</MudTd>
+                        <MudTd DataLabel="T6">@FormatShift(context.FriShiftCode)</MudTd>
+                        <MudTd DataLabel="T7">@FormatShift(context.SatShiftCode)</MudTd>
+                        <MudTd DataLabel="CN">@FormatShift(context.SunShiftCode)</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="Close">Đóng</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<WeeklyShiftScheduleRow> Rows { get; set; } = Array.Empty<WeeklyShiftScheduleRow>();
+    [Parameter] public string DepartmentName { get; set; } = string.Empty;
+    [Parameter] public DateOnly WeekStartDate { get; set; }
+
+    private void Close()
+    {
+        MudDialog.Close();
+    }
+
+    private static string FormatShift(string? shiftCode)
+    {
+        return string.IsNullOrWhiteSpace(shiftCode) ? "-" : shiftCode;
+    }
+}

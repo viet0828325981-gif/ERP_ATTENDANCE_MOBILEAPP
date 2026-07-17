@@ -1,0 +1,419 @@
+@page "/manager/shift/registrations"
+@implements IDisposable
+@using System.Globalization
+@using ERP_PAYROLLMOBILE.Models.EmployeeRequest
+@using ERP_PAYROLLMOBILE.Models.ManagerRole.ManagerShift
+@using ERP_PAYROLLMOBILE.Models.ManagerRole.ManagerShiftRegistration
+@using ERP_PAYROLLMOBILE.Services.Features.Shift
+@using ERP_PAYROLLMOBILE.Services.RoleScope
+@inject IShiftFeatureService ShiftFeatureService
+@inject IRoleScopeService RoleScopeService
+@inject IDialogService ShiftDialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Yêu cầu đăng ký ca</PageTitle>
+
+<RoleGuard AllowedRole="@ERP_PAYROLLMOBILE.Services.RoleScope.AppRole.Manager">
+    <div class="manager-shift-page">
+        <div class="admin-wrap">
+            <div class="content">
+            <div class="admin-card">
+                <div class="filter-bar filter-bar-compact-top">
+                    <div class="filter-field search-field-group">
+                        <label for="request-employee-search">Tìm kiếm</label>
+                        <div class="search-field">
+                            <span class="search-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="7" />
+                                    <path d="m20 20-3.5-3.5" />
+                                </svg>
+                            </span>
+                            <input id="request-employee-search" type="text" value="@employeeKeyword" @onchange="OnEmployeeKeywordChangedAsync" placeholder="Tìm nhân viên...">
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label for="request-month-filter">Tháng</label>
+                        <select id="request-month-filter" value="@selectedMonth.Month" @onchange="OnMonthChangedAsync">
+                            @for (var month = 1; month <= 12; month++)
+                            {
+                                <option value="@month">Tháng @month</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="filter-field">
+                        <label for="request-year-filter">Năm</label>
+                        <select id="request-year-filter" value="@selectedMonth.Year" @onchange="OnYearChangedAsync">
+                            @for (var year = DateTime.Today.Year - 1; year <= DateTime.Today.Year + 2; year++)
+                            {
+                                <option value="@year">@year</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="shift-screen-tabs" role="tablist" aria-label="Điều hướng đăng ký ca">
+                    <button class="shift-screen-tab is-active" type="button" aria-current="page">
+                        <span class="tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6" /><path d="M12 9v6" /><path d="M9 3h6l2 2h4v16H3V5h4z" /></svg>
+                        </span>
+                        <span>Yêu cầu đăng ký ca</span>
+                    </button>
+                    <button class="shift-screen-tab" type="button" @onclick="OpenSchedulePage">
+                        <span class="tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+                        </span>
+                        <span>Bảng lịch ca</span>
+                    </button>
+                    <button class="shift-screen-tab" type="button" @onclick="OpenRegistrationDialogAsync">
+                        <span class="tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                        </span>
+                        <span>Đăng ký ca</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="request-intro-row">
+                <div>
+                    <p class="request-title">Yêu cầu đăng ký ca</p>
+                    <p class="request-intro-text">Danh sách yêu cầu đăng ký ca đang chờ duyệt của phòng ban đang chọn.</p>
+                </div>
+                <div class="page-actions">
+                    <button type="button" class="page-action-button secondary" @onclick="ApproveAllAsync" disabled="@IsBusy">
+                        <span>@(isApprovingAll ? "Đang xử lý" : "Chấp nhận tất cả")</span>
+                    </button>
+                    <button type="button" class="page-action-button primary" @onclick="LoadAsync" disabled="@isLoading || IsBusy">
+                        <span>@(isLoading ? "Đang tải" : "Tải lại")</span>
+                    </button>
+                </div>
+                </div>
+
+                <div class="request-count-row">
+                    <div class="request-count">@FilteredRequests.Count yêu cầu chờ duyệt</div>
+                </div>
+
+                <div class="request-body">
+                    @if (isLoading)
+                    {
+                        <div class="request-empty">Đang tải yêu cầu đăng ký ca...</div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(bodyMessage))
+                    {
+                        <div class="request-empty">@bodyMessage</div>
+                    }
+                    else
+                    {
+                        <ul class="request-list">
+                            @foreach (var request in FilteredRequests)
+                            {
+                                <li class="request-card open">
+                                    <div class="request-summary">
+                                        <div class="request-info-block">
+                                            <div class="request-name-row">
+                                                <span class="request-employee-name">@(string.IsNullOrWhiteSpace(request.FullName) ? request.EmployeeId : request.FullName)</span>
+                                                <span class="status-badge status-pending">Chờ duyệt</span>
+                                            </div>
+                                            <span class="request-subtitle">@request.EmployeeId · @GetRequestTypeLabel(request.RequestType)</span>
+                                        </div>
+                                        <div class="request-action-icons">
+                                            <button type="button" class="icon-action accept" title="Chấp nhận" @onclick="() => ApproveAsync(request)" disabled="@IsBusy || IsProcessing(request.Id)">✔</button>
+                                            <button type="button" class="icon-action reject" title="Từ chối" @onclick="() => RejectAsync(request)" disabled="@IsBusy || IsProcessing(request.Id)">✕</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="request-details-grid">
+                                        <div class="detail-item"><span>Ca</span><strong>@(request.ShiftCode ?? "-")</strong></div>
+                                        <div class="detail-item"><span>Ngày áp dụng</span><strong>@request.TargetDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</strong></div>
+                                        <div class="detail-item"><span>Ngày nguồn</span><strong>@(request.SourceDate?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? "-")</strong></div>
+                                        <div class="detail-item"><span>Người tạo</span><strong>@GetCreatedLabel(request)</strong></div>
+                                        <div class="detail-item"><span>Ngày tạo</span><strong>@request.CreatedAt.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)</strong></div>
+                                    </div>
+
+                                    <div class="request-reason-box">
+                                        <span>Lý do</span>
+                                        <p>@(string.IsNullOrWhiteSpace(request.Reason) ? "-" : request.Reason)</p>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+            </div>
+        </div>
+
+    </div>
+</RoleGuard>
+
+@code {
+    private readonly List<WorkRequestModel> requests = new();
+    private DateOnly selectedMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private Guid? lastLoadedDepartmentId;
+    private string? employeeKeyword;
+    private string? bodyMessage;
+    private Guid? processingRequestId;
+    private bool isLoading;
+    private bool isApprovingAll;
+
+    private bool IsBusy => processingRequestId.HasValue || isApprovingAll;
+
+    private List<WorkRequestModel> FilteredRequests => requests
+        .Where(item => string.IsNullOrWhiteSpace(employeeKeyword)
+            || item.EmployeeId.Contains(employeeKeyword, StringComparison.OrdinalIgnoreCase)
+            || (!string.IsNullOrWhiteSpace(item.FullName) && item.FullName.Contains(employeeKeyword, StringComparison.OrdinalIgnoreCase)))
+        .OrderByDescending(item => item.CreatedAt)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        RoleScopeService.Changed += OnRoleScopeChanged;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var scope = await RoleScopeService.LoadAsync();
+        if (!scope.DepartmentId.HasValue)
+        {
+            requests.Clear();
+            bodyMessage = "Hãy chọn phòng ban để xem yêu cầu đăng ký ca.";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        isLoading = true;
+        bodyMessage = null;
+        try
+        {
+            var data = await ShiftFeatureService.GetShiftRegistrationsAsync(
+                scope.CompanyId,
+                selectedMonth.Year,
+                selectedMonth.Month,
+                scope.DepartmentId,
+                0);
+
+            requests.Clear();
+            requests.AddRange(data.OrderByDescending(item => item.CreatedAt));
+            lastLoadedDepartmentId = scope.DepartmentId;
+
+            if (requests.Count == 0)
+            {
+                bodyMessage = "Không có yêu cầu đăng ký ca chờ duyệt.";
+            }
+        }
+        catch (Exception ex)
+        {
+            requests.Clear();
+            bodyMessage = "Không tải được dữ liệu yêu cầu đăng ký ca.";
+            Snackbar.Add($"Không tải được yêu cầu đăng ký ca: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ApproveAsync(WorkRequestModel request)
+    {
+        await ProcessRequestAsync(
+            request.Id,
+            async scope =>
+            {
+                var approveRequest = new ManagerApproveShiftRegistrationDto
+                {
+                    RequestId = request.Id,
+                    ApprovedBy = scope.EmployeeId
+                };
+
+                var message = await ShiftFeatureService.ApproveRegistrationAsync(scope.CompanyId, approveRequest);
+                Snackbar.Add(string.IsNullOrWhiteSpace(message) ? "Đã duyệt đăng ký ca." : message, Severity.Success);
+            });
+    }
+
+    private async Task ApproveAllAsync()
+    {
+        isApprovingAll = true;
+        try
+        {
+            var scope = await RoleScopeService.LoadAsync();
+            if (!scope.DepartmentId.HasValue)
+            {
+                bodyMessage = "Hãy chọn phòng ban để xem yêu cầu đăng ký ca.";
+                return;
+            }
+
+            var approveAllRequest = new ManagerApproveAllShiftRegistrationDto
+            {
+                DepartmentId = scope.DepartmentId,
+                ApprovedBy = scope.EmployeeId
+            };
+
+            var result = await ShiftFeatureService.ApproveAllRegistrationsAsync(scope.CompanyId, approveAllRequest);
+            Snackbar.Add($"Đã chấp nhận {result.ApprovedCount} yêu cầu đăng ký ca.", Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Không chấp nhận tất cả được: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isApprovingAll = false;
+        }
+    }
+
+    private async Task RejectAsync(WorkRequestModel request)
+    {
+        await ProcessRequestAsync(
+            request.Id,
+            async scope =>
+            {
+                var rejectRequest = new ManagerRejectShiftRegistrationDto
+                {
+                    RequestId = request.Id,
+                    RejectedBy = scope.EmployeeId
+                };
+
+                var message = await ShiftFeatureService.RejectRegistrationAsync(scope.CompanyId, rejectRequest);
+                Snackbar.Add(string.IsNullOrWhiteSpace(message) ? "Đã từ chối đăng ký ca." : message, Severity.Success);
+            });
+    }
+
+    private async Task ProcessRequestAsync(Guid requestId, Func<RoleScopeState, Task> action)
+    {
+        processingRequestId = requestId;
+        try
+        {
+            var scope = await RoleScopeService.LoadAsync();
+            await action(scope);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Không xử lý được yêu cầu đăng ký ca: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            processingRequestId = null;
+        }
+    }
+
+    private bool IsProcessing(Guid requestId)
+    {
+        return processingRequestId == requestId;
+    }
+
+    private async Task OnMonthChangedAsync(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var month))
+        {
+            selectedMonth = new DateOnly(selectedMonth.Year, month, 1);
+            await LoadAsync();
+        }
+    }
+
+    private async Task OnYearChangedAsync(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var year))
+        {
+            selectedMonth = new DateOnly(year, selectedMonth.Month, 1);
+            await LoadAsync();
+        }
+    }
+
+    private Task OnEmployeeKeywordChangedAsync(ChangeEventArgs args)
+    {
+        employeeKeyword = args.Value?.ToString();
+        return Task.CompletedTask;
+    }
+
+    private void OpenSchedulePage()
+    {
+        Navigation.NavigateTo("/manager/shift");
+    }
+
+    private async Task OpenRegistrationDialogAsync()
+    {
+        var scope = await RoleScopeService.LoadAsync();
+        if (!scope.DepartmentId.HasValue)
+        {
+            Snackbar.Add("Hãy chọn phòng ban trước khi đăng ký ca.", Severity.Warning);
+            return;
+        }
+
+        var summaries = await ShiftFeatureService.GetEmployeeSummariesAsync(scope.CompanyId, selectedMonth.Year, selectedMonth.Month);
+        var employees = summaries
+            .Where(item => item.DepartmentId == scope.DepartmentId)
+            .GroupBy(item => item.EmployeeId, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .OrderBy(item => item.FullName)
+            .Select(item => new ManagerShiftEmployeeOption
+            {
+                EmployeeId = item.EmployeeId,
+                FullName = item.FullName,
+                DepartmentId = item.DepartmentId,
+                DepartmentName = item.DepartmentName
+            })
+            .ToList();
+
+        if (employees.Count == 0)
+        {
+            Snackbar.Add("Không có nhân viên để đăng ký ca trong phòng ban hiện tại.", Severity.Warning);
+            return;
+        }
+
+        var parameters = new DialogParameters
+        {
+            ["CompanyId"] = scope.CompanyId,
+            ["DepartmentId"] = scope.DepartmentId,
+            ["CreatedBy"] = scope.EmployeeId,
+            ["Employees"] = employees,
+            ["SelectedEmployeeIds"] = employees.Select(item => item.EmployeeId).ToList()
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.ExtraLarge
+        };
+
+        var dialog = await ShiftDialogService.ShowAsync<ManagerShiftRegistrationDialog>("Đăng ký ca", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private void OnRoleScopeChanged()
+    {
+        if (RoleScopeService.Current.DepartmentId != lastLoadedDepartmentId)
+        {
+            _ = InvokeAsync(LoadAsync);
+        }
+    }
+
+    public void Dispose()
+    {
+        RoleScopeService.Changed -= OnRoleScopeChanged;
+    }
+
+    private static string GetRequestTypeLabel(string? requestType)
+    {
+        return requestType switch
+        {
+            "SHIFT_REGISTRATION" => "Đăng ký ca",
+            "SHIFT_CHANGE" => "Đổi ca",
+            _ => string.IsNullOrWhiteSpace(requestType) ? "Không xác định" : requestType
+        };
+    }
+
+    private static string GetCreatedLabel(WorkRequestModel request)
+    {
+        return string.IsNullOrWhiteSpace(request.CreatedBy) ? request.EmployeeId : request.CreatedBy;
+    }
+}

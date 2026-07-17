@@ -1,0 +1,57 @@
+@namespace ERP_PAYROLLMOBILE.Components.Shared
+
+<div class="calendar-card app-card">
+    <div class="cal-header">@MonthName, <b>@Year</b></div>
+
+    <div class="weekdays">
+        <span>T2</span>
+        <span>T3</span>
+        <span>T4</span>
+        <span>T5</span>
+        <span>T6</span>
+        <span>T7</span>
+        <span class="sun">CN</span>
+    </div>
+
+    <div class="days-grid">
+        @for (int w = 0; w < Weeks.Count; w++)
+        {
+            var week = Weeks[w];
+
+            @foreach (var cell in week)
+            {
+                if (cell.IsEmpty)
+                {
+                    <div class="day empty">
+                        <div class="solar">0</div>
+                        <div class="shift">--</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="day @(cell.IsSunday ? "sunday" : "") @(cell.IsSelected ? "selected" : "")"
+                         @onclick="() => HandleDayClick(cell)">
+
+                        @if (cell.IsSelected)
+                        {
+                            <div class="solar-wrap">
+                                <div class="solar">@cell.Day</div>
+                                <div class="shift">@cell.ShiftCode</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="solar">@cell.Day</div>
+                            <div class="shift">@cell.ShiftCode</div>
+                        }
+                    </div>
+                }
+            }
+
+            if (w < Weeks.Count - 1)
+            {
+                <div class="day-row-divider"></div>
+            }
+        }
+    </div>
+</div>

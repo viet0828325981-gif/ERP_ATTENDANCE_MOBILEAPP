@@ -1,0 +1,734 @@
+/* Khung tổng thể của màn yêu cầu công */
+.employee-request-page {
+    --request-primary: #4f46e5;
+    --request-primary-dark: #3730a3;
+    --request-bg-page: #fffff;
+    --request-bg-surface: #ffffff;
+    --request-text-primary: #111827;
+    --request-text-secondary: #6b7280;
+    --request-text-muted: #9ca3af;
+    --request-border: #e5e7eb;
+    --request-success-bg: #e7f5ec;
+    --request-success-text: #15803d;
+    --request-pending-bg: #fef3e2;
+    --request-pending-text: #b45309;
+    --request-blue-bg: #e6f1fb;
+    --request-blue-text: #185fa5;
+    --request-amber-bg: #faeeda;
+    --request-amber-text: #854f0b;
+    --request-teal-bg: #e1f5ee;
+    --request-teal-text: #0f6e56;
+    --request-purple-bg: #eeedfe;
+    --request-purple-text: #3c3489;
+    --request-pink-bg: #fbeaf0;
+    --request-pink-text: #72243e;
+    --request-indigo-bg: #e8e7fc;
+    --request-indigo-text: #4338ca;
+    --request-red-bg: #fcebeb;
+    --request-red-text: #a32d2d;
+    width: 100%;
+    min-height: 100vh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--request-bg-page);
+}
+
+/* Vùng nội dung chính của màn */
+.request-page-content {
+    flex: 1;
+    padding: clamp(16px, 4vw, 20px) 0 90px;
+}
+
+/* Phần giới thiệu và CTA đầu màn */
+.request-intro-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(8px, 2.5vw, 12px);
+    margin-bottom: 5px;
+}
+
+.request-intro-text {
+    margin: 0;
+    color: var(--request-text-secondary);
+    font-size: clamp(12px, 2.8vw, 13px);
+    line-height: 1.5;
+}
+
+/* Filter đầu trang */
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.request-filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(8px, 2vw, 10px);
+    margin-bottom: clamp(8px, 2.5vw, 10px);
+    width: 100%;
+}
+
+.filter-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--request-text-muted);
+    font-size: clamp(10px, 2.4vw, 11px);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.filter-field select,
+.filter-field input {
+    width: 100%;
+    height: clamp(36px, 8vw, 38px);
+    padding: 0 clamp(7px, 2vw, 8px);
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 600;
+    color: var(--request-text-primary);
+    font-family: var(--app-font);
+    background: var(--request-bg-surface);
+    border: 1px solid var(--request-border);
+    border-radius: 10px;
+    appearance: none;
+}
+
+.filter-field select:focus,
+.filter-field input:focus {
+    outline: none;
+    border-color: var(--request-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+/* Nút tạo yêu cầu */
+.request-primary-button {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: clamp(4px, 1.6vw, 6px);
+    height: clamp(38px, 8.5vw, 40px);
+    padding: 0 clamp(12px, 3vw, 16px);
+    border: none;
+    border-radius: 10px;
+    white-space: nowrap;
+    color: #fff;
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 600;
+    font-family: var(--app-font);
+    background: var(--request-primary);
+    box-shadow: none;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+
+.request-primary-button:hover {
+    background: var(--request-primary-dark);
+}
+
+.request-primary-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Khối hiển thị thông báo và trạng thái rỗng */
+.request-alert,
+.request-empty {
+    margin-bottom: clamp(12px, 3vw, 16px);
+    padding: clamp(12px, 3vw, 14px) clamp(12px, 3.5vw, 16px);
+    border-radius: 16px;
+    border: 1px solid var(--request-border);
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 600;
+}
+
+.request-alert {
+    color: var(--danger);
+    background: var(--danger-soft-bg);
+}
+
+.request-alert.slim {
+    margin-bottom: 0;
+}
+
+.request-empty {
+    color: var(--request-text-secondary);
+    background: var(--request-bg-surface);
+}
+
+/* Card hiển thị từng yêu cầu */
+.request-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(5px, 1.5vw, 8px);
+}
+
+.request-card {
+    margin: 0;
+    border: 1px solid var(--request-border);
+    border-radius: 12px;
+    background: var(--request-bg-surface);
+    box-shadow: none;
+    overflow: hidden;
+    transition: border-color .15s ease;
+}
+
+.request-card:hover {
+    border-color: #c7c9f5;
+}
+
+.request-summary {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: clamp(6px, 2vw, 10px);
+    padding: clamp(9px, 2.5vw, 10px);
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.request-icon {
+    width: clamp(36px, 9.5vw, 40px);
+    height: clamp(36px, 9.5vw, 40px);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.request-icon svg,
+.expand-btn svg {
+    width: clamp(16px, 4.5vw, 18px);
+    height: clamp(16px, 4.5vw, 18px);
+}
+
+.icon-blue {
+    background: var(--request-blue-bg);
+    color: var(--request-blue-text);
+}
+
+.icon-amber {
+    background: var(--request-amber-bg);
+    color: var(--request-amber-text);
+}
+
+.icon-teal {
+    background: var(--request-teal-bg);
+    color: var(--request-teal-text);
+}
+
+.icon-purple {
+    background: var(--request-purple-bg);
+    color: var(--request-purple-text);
+}
+
+.icon-pink {
+    background: var(--request-pink-bg);
+    color: var(--request-pink-text);
+}
+
+.icon-indigo {
+    background: var(--request-indigo-bg);
+    color: var(--request-indigo-text);
+}
+
+.icon-red {
+    background: var(--request-red-bg);
+    color: var(--request-red-text);
+}
+
+.request-info {
+    min-width: 0;
+}
+
+.request-title,
+.request-date {
+    display: block;
+}
+
+.request-title {
+    margin: 0 0 2px;
+    color: var(--request-text-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.request-date {
+    color: var(--request-text-muted);
+    font-size: 12px;
+}
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-success {
+    background: var(--request-success-bg);
+    color: var(--request-success-text);
+}
+
+.status-pending {
+    background: var(--request-pending-bg);
+    color: var(--request-pending-text);
+}
+
+.status-rejected,
+.status-cancelled {
+    background: var(--request-red-bg);
+    color: var(--request-red-text);
+}
+
+.expand-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--request-text-muted);
+    transition: transform .2s ease;
+}
+
+
+
+.request-card.open .expand-btn {
+    transform: rotate(180deg);
+}
+
+.request-details {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 14px;
+    transition: max-height .25s ease;
+}
+
+.request-card.open .request-details {
+    max-height: 760px;
+    padding: 14px;
+}
+
+.inline-reason {
+    margin-top: 12px;
+}
+
+.inline-reason p {
+    margin: 8px 0 0;
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: pre-wrap;
+}
+
+/* Dòng thông tin bên trong card */
+.request-detail-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--divider);
+}
+
+.request-detail-row:first-child {
+    padding-top: 0;
+}
+
+.request-detail-row:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.request-detail-label {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.request-detail-value {
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 700;
+    text-align: right;
+}
+
+/* Các pill hiển thị loại/trạng thái */
+.pill {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.pill-neutral {
+    background: var(--divider);
+    color: var(--text-muted);
+}
+
+.pill-status {
+    background: var(--accent-soft-bg);
+    color: var(--accent);
+}
+
+.pill-status.rejected,
+.pill-status.cancelled {
+    background: var(--danger-soft-bg);
+    color: var(--danger);
+}
+
+/* Nút link và nút hủy */
+.link-button {
+    border: 0;
+    padding: 0;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 800;
+    background: transparent;
+    cursor: pointer;
+}
+
+.btn-cancel {
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    background: var(--bg-card);
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    padding: 6px 16px;
+    border-radius: 10px;
+    font-family: var(--app-font);
+}
+
+.btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* Lớp phủ và khung modal */
+.request-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(28, 29, 33, 0.28);
+}
+
+.request-modal {
+    width: min(54rem, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: 0 18px 40px rgba(28, 29, 33, 0.14);
+}
+
+.request-modal.large {
+    width: min(64rem, 100%);
+}
+
+/* Header của modal */
+.request-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.request-modal-header h2,
+.section-subtitle {
+    margin: 0;
+    color: var(--text-main);
+}
+
+.request-modal-header h2 {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.request-modal-header p {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.close-button {
+    border: 0;
+    width: 32px;
+    height: 32px;
+    color: var(--text-muted);
+    font-weight: 800;
+    background: transparent;
+    cursor: pointer;
+}
+
+.request-detail-grid,
+.create-form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.request-detail-grid.compact {
+    margin-top: 12px;
+}
+
+.request-detail-grid > div,
+.reason-box,
+.daily-detail-box,
+.form-field {
+    padding: clamp(12px, 3vw, 14px);
+    background: var(--bg-card);
+    border: 1px solid var(--divider);
+    border-radius: 16px;
+}
+
+.request-detail-grid span,
+.reason-box span,
+.section-subtitle,
+.form-field span {
+    display: block;
+    color: var(--text-muted);
+    font-size: clamp(10px, 2.4vw, 11px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.request-detail-grid strong,
+.reason-box p {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-main);
+    font-size: clamp(13px, 3vw, 14px);
+    font-weight: 700;
+}
+
+.reason-box,
+.daily-detail-box,
+.form-field.full-width {
+    grid-column: 1 / -1;
+}
+
+.reason-box p {
+    margin-bottom: 0;
+    white-space: pre-wrap;
+}
+
+.compact-table {
+    border: 1px solid var(--divider);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.request-table {
+    overflow-x: auto;
+}
+
+.request-table-head,
+.request-table-row {
+    display: grid;
+    gap: clamp(8px, 2.5vw, 12px);
+    align-items: center;
+    padding: clamp(10px, 3vw, 12px) clamp(10px, 3.5vw, 14px);
+}
+
+.request-table-head {
+    color: var(--text-main);
+    font-size: clamp(11px, 2.6vw, 12px);
+    font-weight: 700;
+    background: var(--bg-page);
+}
+
+.request-table-row {
+    color: var(--text-main);
+    font-size: clamp(12px, 2.8vw, 13px);
+    border-top: 1px solid var(--divider);
+}
+
+.compact-group-header,
+.compact-group-row {
+    grid-template-columns: minmax(5rem, .9fr) minmax(6rem, 1.2fr) minmax(4rem, .8fr) minmax(5rem, .9fr) minmax(8rem, 1.8fr);
+    min-width: 34rem;
+}
+
+.form-field {
+    display: grid;
+    gap: clamp(6px, 2vw, 8px);
+}
+
+.form-field select,
+.form-field input,
+.form-field textarea {
+    width: 100%;
+    padding: clamp(9px, 2.5vw, 10px) clamp(10px, 3vw, 12px);
+    color: var(--text-main);
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 600;
+    font-family: var(--app-font);
+    background: var(--bg-card);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-input);
+    outline: 0;
+}
+
+.form-field textarea {
+    resize: vertical;
+}
+
+.date-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(8px, 2.5vw, 10px);
+    margin-top: 4px;
+}
+
+.date-chip {
+    min-width: clamp(4.5rem, 20vw, 5rem);
+    padding: clamp(9px, 2.5vw, 10px) clamp(10px, 3vw, 12px);
+    text-align: left;
+    background: var(--bg-card);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-input);
+    cursor: pointer;
+}
+
+.date-chip strong,
+.date-chip small {
+    display: block;
+}
+
+.date-chip strong {
+    color: var(--text-main);
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 700;
+}
+
+.date-chip small {
+    margin-top: 3px;
+    color: var(--text-muted);
+    font-size: clamp(10px, 2.5vw, 11px);
+    font-weight: 600;
+}
+
+.date-chip.selected {
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+}
+
+.date-chip.selected strong,
+.date-chip.selected small {
+    color: var(--bg-card);
+}
+
+.create-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: clamp(8px, 2.5vw, 12px);
+    margin-top: clamp(12px, 3vw, 16px);
+}
+
+.outline-button,
+.primary-button {
+    min-height: clamp(40px, 9vw, 44px);
+    padding: 0 clamp(14px, 4vw, 18px);
+    border-radius: var(--radius-btn);
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-family: var(--app-font);
+    cursor: pointer;
+}
+
+.outline-button {
+    color: var(--accent);
+    background: var(--bg-card);
+    border: 1px solid var(--divider);
+}
+
+.primary-button {
+    border: 0;
+    color: var(--bg-card);
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+}
+
+.outline-button:disabled,
+.primary-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+@media (max-width: 640px) {
+    .request-page-content {
+        padding: clamp(16px, 4vw, 24px) 0 90px;
+    }
+
+    .request-intro-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .request-primary-button {
+        justify-content: center;
+    }
+
+    .request-filters {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+
+    .expand-btn {
+        grid-column: 3;
+        grid-row: 1 / span 2;
+    }
+
+
+    .compact-group-header,
+    .compact-group-row {
+        grid-template-columns: minmax(5rem, .9fr) minmax(6rem, 1.2fr) minmax(4rem, .8fr) minmax(5rem, .9fr) minmax(8rem, 1.8fr);
+    }
+
+    .request-modal {
+        padding: clamp(12px, 4vw, 16px);
+    }
+
+    .create-form-actions {
+        flex-direction: column;
+    }
+
+@media (max-width: 420px) {
+    .request-filters {
+        gap: 6px;
+    }
+
+    .filter-field label {
+        font-size: 9px;
+    }
+
+    .filter-field select,
+    .filter-field input {
+        padding-inline: 6px;
+        font-size: 11px;
+    }
+}
+
+    .outline-button,
+    .primary-button {
+        width: 100%;
+    }
+}

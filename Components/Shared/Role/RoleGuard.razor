@@ -1,0 +1,55 @@
+@namespace ERP_PAYROLLMOBILE.Components.Shared.Role
+@implements IDisposable
+@using ERP_PAYROLLMOBILE.Services.RoleScope
+@inject IRoleScopeService RoleScopeService
+
+@if (isAllowed)
+{
+    @ChildContent
+}
+else if (isLoaded)
+{
+    <div class="role-guard-denied">Bạn không có quyền xem chức năng này.</div>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public AppRole AllowedRole { get; set; } = AppRole.Employee;
+
+    private bool isLoaded;
+    private bool isAllowed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RoleScopeService.Changed += OnRoleScopeChanged;
+
+        if (RoleScopeService.Current.IsLoaded)
+        {
+            ApplyScope(RoleScopeService.Current);
+            return;
+        }
+
+        var scope = await RoleScopeService.LoadAsync();
+        ApplyScope(scope);
+    }
+
+    private void OnRoleScopeChanged()
+    {
+        ApplyScope(RoleScopeService.Current);
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void ApplyScope(RoleScopeState scope)
+    {
+        isAllowed = scope.Role == AllowedRole;
+        isLoaded = scope.IsLoaded;
+    }
+
+    public void Dispose()
+    {
+        RoleScopeService.Changed -= OnRoleScopeChanged;
+    }
+}

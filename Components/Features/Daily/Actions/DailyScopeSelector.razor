@@ -1,0 +1,48 @@
+@using ERP_PAYROLLMOBILE.Services.RoleScope
+@inject IRoleScopeService RoleScopeService
+
+<div class="daily-scope-selector">
+    <div class="daily-action-title">Phạm vi xem</div>
+    <div class="daily-action-row">
+        <label>DepartmentId</label>
+        <input value="@departmentIdText" @onchange="OnDepartmentChanged" placeholder="Guid phòng ban" />
+    </div>
+    <div class="daily-action-row">
+        <label>EmployeeId</label>
+        <input value="@employeeIdText" @onchange="OnEmployeeChanged" placeholder="Mã nhân viên" />
+    </div>
+    <button type="button" @onclick="ApplyScope">Áp dụng phạm vi</button>
+</div>
+
+@code {
+    private string? departmentIdText;
+    private string? employeeIdText;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var scope = await RoleScopeService.LoadAsync();
+        departmentIdText = scope.DepartmentId?.ToString();
+        employeeIdText = scope.SelectedEmployeeId;
+    }
+
+    private void OnDepartmentChanged(ChangeEventArgs args)
+    {
+        departmentIdText = args.Value?.ToString();
+    }
+
+    private void OnEmployeeChanged(ChangeEventArgs args)
+    {
+        employeeIdText = args.Value?.ToString();
+    }
+
+    private void ApplyScope()
+    {
+        Guid? departmentId = null;
+        if (Guid.TryParse(departmentIdText, out var value))
+        {
+            departmentId = value;
+        }
+
+        RoleScopeService.SetScope(departmentId, string.IsNullOrWhiteSpace(employeeIdText) ? null : employeeIdText);
+    }
+}

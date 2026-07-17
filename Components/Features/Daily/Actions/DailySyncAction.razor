@@ -1,0 +1,74 @@
+@using ERP_PAYROLLMOBILE.Models.ManagerRole.ManagerAttendance
+@using ERP_PAYROLLMOBILE.Services.Features.Daily
+@using ERP_PAYROLLMOBILE.Services.RoleScope
+@inject IDailyFeatureService DailyFeatureService
+@inject IRoleScopeService RoleScopeService
+@inject ISnackbar Snackbar
+
+<div class="daily-sync-action">
+    <div class="daily-action-title">Đồng bộ chấm công</div>
+    <div class="daily-action-row">
+        <label>Từ ngày</label>
+        <input type="date" value="@fromDate.ToString("yyyy-MM-dd")" @onchange="OnFromChanged" />
+    </div>
+    <div class="daily-action-row">
+        <label>Đến ngày</label>
+        <input type="date" value="@toDate.ToString("yyyy-MM-dd")" @onchange="OnToChanged" />
+    </div>
+    <button type="button" class="app-btn-primary" @onclick="SyncAsync" disabled="@isSyncing">
+        @(isSyncing ? "Đang đồng bộ..." : "Đồng bộ")
+    </button>
+</div>
+
+@code {
+    private DateOnly fromDate = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly toDate = DateOnly.FromDateTime(DateTime.Today);
+    private bool isSyncing;
+
+    private void OnFromChanged(ChangeEventArgs args)
+    {
+        if (DateOnly.TryParse(args.Value?.ToString(), out var value))
+        {
+            fromDate = value;
+        }
+    }
+
+    private void OnToChanged(ChangeEventArgs args)
+    {
+        if (DateOnly.TryParse(args.Value?.ToString(), out var value))
+        {
+            toDate = value;
+        }
+    }
+
+    private async Task SyncAsync()
+    {
+        if (toDate < fromDate)
+        {
+            Snackbar.Add("Khoảng ngày đồng bộ không hợp lệ.", Severity.Warning);
+            return;
+        }
+
+        isSyncing = true;
+        try
+        {
+            var scope = await RoleScopeService.LoadAsync();
+            var request = new ManagerAttendanceDailySyncDto
+            {
+                From = fromDate,
+                To = toDate
+            };
+
+            var message = await DailyFeatureService.SyncRangeAsync(scope.CompanyId, request);
+            Snackbar.Add(string.IsNullOrWhiteSpace(message) ? "Đã đồng bộ chấm công." : message, Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Không đồng bộ được chấm công: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSyncing = false;
+        }
+    }
+}

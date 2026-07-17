@@ -1,0 +1,837 @@
+﻿@page "/employee/daily"
+@implements IDisposable
+@using System.Globalization
+@using ERP_PAYROLLMOBILE.Models.EmployeeRequest
+@using ERP_PAYROLLMOBILE.RequestBuilders
+@using ERP_PAYROLLMOBILE.Api.EMPLOYEEROLE.EmployeeRequest
+@using ERP_PAYROLLMOBILE.Services.Features.Daily
+@using ERP_PAYROLLMOBILE.Services.RoleScope
+@using ERP_PAYROLLMOBILE.Services.Ui
+@inject AttendanceApiClient AttendanceApiClient
+@inject AttendanceRequestBuilder AttendanceRequestBuilder
+@inject EmployeeRequestApiClient EmployeeRequestApiClient
+@inject EmployeeRequestRequestBuilder RequestBuilder
+@inject EmployeeDailyStateService State
+@inject PullToRefreshService PullToRefreshService
+@inject ISnackbar Snackbar
+@inject MoonAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Chấm công</PageTitle>
+
+<RoleGuard AllowedRole="@ERP_PAYROLLMOBILE.Services.RoleScope.AppRole.Employee">
+<section class="attendance-page">
+    <div class="attendance-content">
+        <div class="attendance-intro-row">
+            <p class="attendance-intro-text">Xem thông tin chấm công.</p>
+            <button type="button" class="search-btn" @onclick="ToggleSearchPanel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5" />
+                </svg>
+                @(showSearchPanel ? "Ẩn" : "Lọc")
+            </button>
+        </div>
+
+        @if (showSearchPanel)
+        {
+            <div class="search-panel">
+                <div class="search-mode-row">
+                    <button type="button" class="mode-option @(searchMode == EmployeeDailyViewMode.Day ? "active" : null)" @onclick="() => SetSearchModeAsync(EmployeeDailyViewMode.Day)">Theo ngày</button>
+                    <button type="button" class="mode-option @(searchMode == EmployeeDailyViewMode.Month ? "active" : null)" @onclick="() => SetSearchModeAsync(EmployeeDailyViewMode.Month)">Theo tháng</button>
+                </div>
+
+                @if (searchMode == EmployeeDailyViewMode.Day)
+                {
+                    <label class="attendance-field full-width">
+                        <span>Ngày chấm công</span>
+                        <input type="date" value="@ToDateInput(selectedDate)" @onchange="OnDateChangedAsync" />
+                    </label>
+                }
+                else
+                {
+                    <div class="attendance-filters">
+                        <div class="attendance-field">
+                            <label>Tháng</label>
+                            <select value="@selectedMonth.Month" @onchange="OnMonthSelectChangedAsync">
+                                @for (var month = 1; month <= 12; month++)
+                                {
+                                    <option value="@month">Tháng @month</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="attendance-field">
+                            <label>Năm</label>
+                            <input type="number" min="2000" max="2100" value="@selectedMonth.Year" @onchange="OnYearChangedAsync" />
+                        </div>
+                    </div>
+                }
+
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="attendance-error">@errorMessage</div>
+        }
+        else if (isLoading)
+        {
+            <div class="attendance-loading">Đang tải dữ liệu...</div>
+        }
+        else
+        {
+            <div class="stats-row">
+                @for (var i = 0; i < SummaryItems.Count; i++)
+                {
+                    var item = SummaryItems[i];
+                    <div class="stat-card @GetSummaryCardClass(i)">
+                        <p class="stat-value">@item.Value</p>
+                        <p class="stat-label">@item.Title</p>
+                    </div>
+                }
+            </div>
+
+            <div class="suggest-card">
+                <div class="suggest-card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a6 6 0 0 0-4 10.5c.6.6 1 1.4 1 2.5h6c0-1.1.4-1.9 1-2.5A6 6 0 0 0 12 2z" /></svg>
+                    <span>Gợi ý</span>
+                    <span class="suggest-count">@SuggestionGroups.Count</span>
+                </div>
+
+                @if (SuggestionGroups.Count == 0)
+                {
+                    <div class="suggest-empty">Không có gợi ý.</div>
+                }
+                else
+                {
+                    <div class="suggest-list">
+                        @foreach (var suggestion in SuggestionGroups)
+                        {
+                            var isOpen = openSuggestionIds.Contains(suggestion.Id);
+                            <div class="suggest-item @(isOpen ? "open" : null)">
+                                <button type="button" class="suggest-header" @onclick="() => ToggleSuggestion(suggestion.Id)">
+                                    <span class="suggest-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+                                    </span>
+                                    <span class="suggest-title">@suggestion.Title</span>
+                                    <span class="suggest-chevron" aria-hidden="true">⌄</span>
+                                </button>
+
+                                <div class="suggest-body">
+                                    @foreach (var item in suggestion.Items)
+                                    {
+                                        <div class="suggest-date-row">
+                                            <div class="suggest-date-info">
+                                                <div class="suggest-date">@item.Date.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</div>
+                                                <div class="suggest-note">@item.Note</div>
+                                            </div>
+                                            <div class="suggest-action-row">
+                                                @if (pendingForgotCheckDate == item.Date)
+                                                {
+                                                    <button type="button" class="suggest-day-btn secondary" @onclick:stopPropagation="true" @onclick="ClearPendingForgotCheck">Hủy</button>
+                                                    <button type="button" class="suggest-day-btn confirm" @onclick:stopPropagation="true" @onclick="() => ConfirmForgotCheckAsync(item.Date)" disabled="@(submittingForgotCheckDate == item.Date)">
+                                                        @(submittingForgotCheckDate == item.Date ? "Đang gửi..." : "Xác nhận")
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="suggest-day-btn" @onclick:stopPropagation="true" @onclick="() => PrepareForgotCheck(item.Date)">+ Tạo yêu cầu</button>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (currentRecords.Count == 0)
+            {
+                <div class="attendance-empty">Không có dữ liệu chấm công.</div>
+            }
+            else
+            {
+                <ul class="attendance-list">
+                    @foreach (var record in currentRecords)
+                    {
+                        <li class="attendance-card @(expandedRecordDate == record.WorkDate ? "open" : null)">
+                            <button type="button" class="attendance-row" @onclick="() => ToggleRecordAsync(record.WorkDate)">
+                                <div class="attendance-date">
+                                    <p class="day">@record.WorkDate.ToString("dd/MM", CultureInfo.InvariantCulture)</p>
+                                    <p class="weekday">@record.WorkDate.ToString("ddd", VietnameseCulture)</p>
+                                </div>
+
+                                <span class="attendance-shift @GetShiftBadgeClass(record.Shift)">@GetShiftLabel(record.Shift)</span>
+
+                                <div class="attendance-times">
+                                    <p class="times">@FormatTimeRange(record)</p>
+                                </div>
+
+                                <div class="attendance-work">
+                                    <p class="work-count">@record.WorkDayText công</p>
+                                </div>
+
+                                <span class="expand-btn" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </span>
+                            </button>
+
+                            <div class="attendance-detail">
+                                <div class="detail-row">
+                                    <span class="attendance-detail-label">Ngày đầy đủ</span>
+                                    <span class="attendance-detail-value">@record.Date</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="attendance-detail-label">Ca làm</span>
+                                    <span class="attendance-detail-value">@GetShiftLabel(record.Shift)</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="attendance-detail-label">Check in / out</span>
+                                    <span class="attendance-detail-value">@FormatTimeRange(record)</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="attendance-detail-label">Trạng thái</span>
+                                    <span class="attendance-detail-value">@GetAttendanceStatusLabel(record)</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="attendance-detail-label">Số phút trễ/sớm</span>
+                                    <span class="attendance-detail-value">@record.LateEarlyText</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="attendance-detail-label">Ghi chú</span>
+                                    <span class="attendance-detail-value">@record.Note</span>
+                                </div>
+
+                                <div class="check-log-section">
+                                    <div class="check-log-title">Chi tiết các lần chấm trong ngày</div>
+
+                                    @if (IsLogLoading(record.WorkDate))
+                                    {
+                                        <div class="check-log-state">Đang tải chi tiết chấm công...</div>
+                                    }
+                                    else if (TryGetLogError(record.WorkDate, out var logError))
+                                    {
+                                        <div class="check-log-state error">@logError</div>
+                                    }
+                                    else if (GetCheckLogs(record.WorkDate).Count == 0)
+                                    {
+                                        <div class="check-log-state">Không có dữ liệu quẹt thẻ trong ngày.</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="check-log-list">
+                                            @foreach (var log in GetCheckLogs(record.WorkDate))
+                                            {
+                                                <div class="check-log-item">
+                                                    <span>@(string.IsNullOrWhiteSpace(log.FullName) ? "Lần chấm" : log.FullName)</span>
+                                                    <strong>@log.TimeCheck.ToString("HH:mm:ss", CultureInfo.InvariantCulture)</strong>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        }
+    </div>
+
+    <AppBottomNav ActiveTab="Chấm công" OnTabChanged="HandleTabChange" />
+</section>
+</RoleGuard>
+
+@code {
+    private static readonly CultureInfo VietnameseCulture = new("vi-VN");
+    private readonly Guid companyId = Guid.Parse("A2F3FB40-7FA2-F011-9DB7-208810C238D7");
+    private EmployeeDailyViewMode searchMode
+    {
+        get => State.SearchMode;
+        set => State.SearchMode = value;
+    }
+
+    private DateOnly selectedDate
+    {
+        get => State.SelectedDate;
+        set => State.SelectedDate = value;
+    }
+
+    private DateOnly selectedMonth
+    {
+        get => State.SelectedMonth;
+        set => State.SelectedMonth = value;
+    }
+
+    private List<EmployeeDailyAttendanceRecord> currentRecords
+    {
+        get => State.CurrentRecords;
+        set => State.CurrentRecords = value;
+    }
+
+    private Dictionary<DateOnly, List<AttendanceLogDetailModel>> dailyLogsByDate => State.DailyLogsByDate;
+    private Dictionary<DateOnly, string> dailyLogErrorsByDate => State.DailyLogErrorsByDate;
+    private HashSet<DateOnly> loadingLogDates => State.LoadingLogDates;
+    private HashSet<string> openSuggestionIds => State.OpenSuggestionIds;
+
+    private bool isLoading
+    {
+        get => State.IsLoading;
+        set => State.IsLoading = value;
+    }
+
+    private bool showSearchPanel
+    {
+        get => State.ShowSearchPanel;
+        set => State.ShowSearchPanel = value;
+    }
+
+    private string? errorMessage
+    {
+        get => State.ErrorMessage;
+        set => State.ErrorMessage = value;
+    }
+
+    private DateOnly? expandedRecordDate
+    {
+        get => State.ExpandedRecordDate;
+        set => State.ExpandedRecordDate = value;
+    }
+
+    private DateOnly? pendingForgotCheckDate
+    {
+        get => State.PendingForgotCheckDate;
+        set => State.PendingForgotCheckDate = value;
+    }
+
+    private DateOnly? submittingForgotCheckDate
+    {
+        get => State.SubmittingForgotCheckDate;
+        set => State.SubmittingForgotCheckDate = value;
+    }
+
+    private ForgotCheckSuggestionModel? forgotCheckSuggestion
+    {
+        get => State.ForgotCheckSuggestion;
+        set => State.ForgotCheckSuggestion = value;
+    }
+
+    private IReadOnlyList<AttendanceSummaryItem> SummaryItems =>
+    [
+        new AttendanceSummaryItem("Tổng công", currentRecords.Sum(item => item.WorkDayFactor).ToString("0.##", CultureInfo.InvariantCulture), string.Empty),
+        new AttendanceSummaryItem("Đi trễ", currentRecords.Count(item => item.LateMinutes > 0).ToString(CultureInfo.InvariantCulture), string.Empty),
+        new AttendanceSummaryItem("Về sớm", currentRecords.Count(item => item.EarlyLeaveMinutes > 0).ToString(CultureInfo.InvariantCulture), string.Empty),
+        new AttendanceSummaryItem("Vắng", currentRecords.Count(item => item.IsAbsent).ToString(CultureInfo.InvariantCulture), string.Empty)
+    ];
+
+    private IReadOnlyList<AttendanceSuggestionGroupViewModel> SuggestionGroups => BuildSuggestionGroups();
+
+    protected override async Task OnInitializedAsync()
+    {
+        PullToRefreshService.RefreshRequested += OnPullToRefreshRequestedAsync;
+
+        if (!State.IsInitialized)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private Task HandleTabChange(string tab)
+    {
+        var route = tab switch
+        {
+            "Chấm công" => "/employee/daily",
+            "Yêu cầu" => "/yeu-cau",
+            "Đăng ký ca" => "/dang-ky-ca",
+            "Lương cơ bản" => "/luong-co-ban",
+            _ => "/"
+        };
+
+        Navigation.NavigateTo(route);
+        return Task.CompletedTask;
+    }
+
+    private void ToggleSearchPanel()
+    {
+        showSearchPanel = !showSearchPanel;
+    }
+
+    private async Task SetSearchModeAsync(EmployeeDailyViewMode mode)
+    {
+        if (searchMode == mode)
+        {
+            return;
+        }
+
+        searchMode = mode;
+        await LoadAsync();
+    }
+
+    private async Task OnDateChangedAsync(ChangeEventArgs args)
+    {
+        selectedDate = ParseDate(args.Value?.ToString(), selectedDate);
+        await LoadAsync();
+    }
+
+    private async Task OnMonthSelectChangedAsync(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var month))
+        {
+            selectedMonth = new DateOnly(selectedMonth.Year, month, 1);
+            await LoadAsync();
+        }
+    }
+
+    private async Task OnYearChangedAsync(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var year))
+        {
+            selectedMonth = new DateOnly(year, selectedMonth.Month, 1);
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        expandedRecordDate = null;
+        dailyLogsByDate.Clear();
+        dailyLogErrorsByDate.Clear();
+        loadingLogDates.Clear();
+
+        try
+        {
+            currentRecords = searchMode switch
+            {
+                EmployeeDailyViewMode.Day => await LoadDayRecordsAsync(),
+                _ => await LoadMonthRecordsAsync()
+            };
+
+            await LoadSuggestionsAsync();
+        }
+        catch (Exception ex)
+        {
+            currentRecords = new List<EmployeeDailyAttendanceRecord>();
+            forgotCheckSuggestion = null;
+            errorMessage = ex.Message;
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            State.IsInitialized = true;
+            isLoading = false;
+        }
+    }
+
+    private async Task<List<EmployeeDailyAttendanceRecord>> LoadDayRecordsAsync()
+    {
+        var request = await AttendanceRequestBuilder.BuildDailyAsync(companyId, selectedDate);
+        var data = await AttendanceApiClient.GetDailyAttendanceAsync(request.CompanyId, request.EmployeeId, request.WorkDate);
+        return data is null ? new List<EmployeeDailyAttendanceRecord>() : new List<EmployeeDailyAttendanceRecord> { MapAttendanceRecord(data) };
+    }
+
+    private async Task<List<EmployeeDailyAttendanceRecord>> LoadMonthRecordsAsync()
+    {
+        var request = await AttendanceRequestBuilder.BuildMonthlyAsync(companyId, selectedMonth);
+        var data = await AttendanceApiClient.GetDailyBymonthAttendanceAsync(request.CompanyId, request.EmployeeId, request.From, request.To);
+        return data
+            .OrderByDescending(item => item.WorkDate)
+            .Select(MapAttendanceRecord)
+            .ToList();
+    }
+
+    private async Task LoadSuggestionsAsync()
+    {
+        forgotCheckSuggestion = null;
+
+        try
+        {
+            var suggestionMonth = searchMode == EmployeeDailyViewMode.Day
+                ? new DateOnly(selectedDate.Year, selectedDate.Month, 1)
+                : selectedMonth;
+
+            var request = await AttendanceRequestBuilder.BuildMonthlyAsync(companyId, suggestionMonth);
+            var yesterday = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+            var suggestionTo = request.To < yesterday ? request.To : yesterday;
+
+            if (suggestionTo < request.From)
+            {
+                return;
+            }
+
+            forgotCheckSuggestion = await AttendanceApiClient.GetSuggestForgotCheck(request.CompanyId, request.EmployeeId, request.From, suggestionTo);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Không tải được gợi ý chấm công: {ex.Message}", Severity.Warning);
+        }
+
+        EnsureSuggestionExpandedState();
+    }
+
+    private async Task ToggleRecordAsync(DateOnly workDate)
+    {
+        if (expandedRecordDate == workDate)
+        {
+            expandedRecordDate = null;
+            return;
+        }
+
+        expandedRecordDate = workDate;
+
+        if (!dailyLogsByDate.ContainsKey(workDate)
+            && !dailyLogErrorsByDate.ContainsKey(workDate)
+            && !loadingLogDates.Contains(workDate))
+        {
+            await LoadRecordDetailsAsync(workDate);
+        }
+    }
+
+    private async Task LoadRecordDetailsAsync(DateOnly workDate)
+    {
+        loadingLogDates.Add(workDate);
+        dailyLogErrorsByDate.Remove(workDate);
+
+        try
+        {
+            var request = await AttendanceRequestBuilder.BuildDetailAsync(companyId, workDate);
+            dailyLogsByDate[workDate] = (await AttendanceApiClient.GetDailyDetailAttendanceAsync(request.CompanyId, request.EmployeeId, request.WorkDate))
+                .OrderBy(item => item.TimeCheck)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            dailyLogsByDate[workDate] = new List<AttendanceLogDetailModel>();
+            dailyLogErrorsByDate[workDate] = ex.Message;
+        }
+        finally
+        {
+            loadingLogDates.Remove(workDate);
+        }
+    }
+
+    private bool IsLogLoading(DateOnly workDate)
+    {
+        return loadingLogDates.Contains(workDate);
+    }
+
+    private bool TryGetLogError(DateOnly workDate, out string? message)
+    {
+        return dailyLogErrorsByDate.TryGetValue(workDate, out message);
+    }
+
+    private IReadOnlyList<AttendanceLogDetailModel> GetCheckLogs(DateOnly workDate)
+    {
+        return dailyLogsByDate.TryGetValue(workDate, out var logs) ? logs : Array.Empty<AttendanceLogDetailModel>();
+    }
+
+    private List<AttendanceSuggestionGroupViewModel> BuildSuggestionGroups()
+    {
+        var groups = new List<AttendanceSuggestionGroupViewModel>();
+        var forgotCheckItems = BuildForgotCheckSuggestionItems();
+
+        if (forgotCheckItems.Count > 0)
+        {
+            groups.Add(new AttendanceSuggestionGroupViewModel(
+                "forgot-check",
+                $"Bạn có {forgotCheckItems.Count} ngày thiếu CheckOut trong tháng",
+                forgotCheckItems));
+        }
+
+        return groups;
+    }
+
+    private List<AttendanceSuggestionItemViewModel> BuildForgotCheckSuggestionItems()
+    {
+        var apiItems = forgotCheckSuggestion?.Items
+            .Where(item => item.Date != default)
+            .OrderBy(item => item.Date)
+            .Select(item => new AttendanceSuggestionItemViewModel(
+                item.Date,
+                item.MissingMinutes,
+                string.IsNullOrWhiteSpace(item.Note) ? BuildMissingMinutesNote(item.MissingMinutes) : item.Note))
+            .ToList();
+
+        if (apiItems is { Count: > 0 })
+        {
+            return apiItems;
+        }
+
+        return currentRecords
+            .Where(item => !item.IsAbsent && item.HasCheckIn && !item.HasCheckOut)
+            .OrderBy(item => item.WorkDate)
+            .Select(item => new AttendanceSuggestionItemViewModel(
+                item.WorkDate,
+                item.ForgotMinutes,
+                BuildMissingMinutesNote(item.ForgotMinutes)))
+            .ToList();
+    }
+
+    private void EnsureSuggestionExpandedState()
+    {
+        openSuggestionIds.RemoveWhere(id => SuggestionGroups.All(group => !string.Equals(group.Id, id, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private void ToggleSuggestion(string suggestionId)
+    {
+        if (!openSuggestionIds.Add(suggestionId))
+        {
+            openSuggestionIds.Remove(suggestionId);
+        }
+    }
+
+    private void PrepareForgotCheck(DateOnly workDate)
+    {
+        pendingForgotCheckDate = workDate;
+    }
+
+    private void ClearPendingForgotCheck()
+    {
+        pendingForgotCheckDate = null;
+        submittingForgotCheckDate = null;
+    }
+
+    private async Task ConfirmForgotCheckAsync(DateOnly workDate)
+    {
+        if (submittingForgotCheckDate.HasValue)
+        {
+            return;
+        }
+
+        submittingForgotCheckDate = workDate;
+
+        try
+        {
+            var request = await RequestBuilder.BuildForgotCheckRequestAsync(workDate, null);
+            var message = await EmployeeRequestApiClient.PostForgotCheckAsync(companyId, request);
+            Snackbar.Add(string.IsNullOrWhiteSpace(message) ? "Đã tạo yêu cầu thiếu check thành công." : message, Severity.Success);
+            pendingForgotCheckDate = null;
+
+            if (forgotCheckSuggestion is not null)
+            {
+                forgotCheckSuggestion.Items = forgotCheckSuggestion.Items
+                    .Where(item => item.Date != workDate)
+                    .ToList();
+
+                EnsureSuggestionExpandedState();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Không tạo được yêu cầu thiếu check: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            submittingForgotCheckDate = null;
+        }
+    }
+
+    private static EmployeeDailyAttendanceRecord MapAttendanceRecord(AttendanceDailyViewModel item)
+    {
+        var workDate = DateOnly.FromDateTime(item.WorkDate);
+        var checkIn = item.CheckInTime?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? "--:--";
+        var checkOut = item.CheckOutTime?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? "--:--";
+        var late = item.LateMinutes ?? 0;
+        var early = item.EarlyLeaveMinutes ?? 0;
+        var workDayFactor = item.ResolvedWorkDayFactor ?? item.WorkDayFactor;
+        var isAbsent = !item.CheckInTime.HasValue && !item.CheckOutTime.HasValue && workDayFactor <= 0;
+        var registeredShift = string.IsNullOrWhiteSpace(item.RegisteredShiftCode) ? item.ShiftCode ?? "--" : item.RegisteredShiftCode;
+        var status = isAbsent
+            ? "Vắng"
+            : late > 0 || early > 0
+                ? (late > 0 ? "Đi trễ" : "Về sớm")
+                : "Đúng giờ";
+
+        return new EmployeeDailyAttendanceRecord(
+            workDate,
+            workDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+            registeredShift,
+            $"{checkIn}/{checkOut}",
+            workDayFactor.ToString("0.##", CultureInfo.InvariantCulture),
+            late > 0 || early > 0 ? $"{Math.Max(late, early)} phút" : "-",
+            status,
+            late <= 0 && early <= 0 && !isAbsent,
+            isAbsent ? "Không có dữ liệu chấm công trong ngày." : BuildNote(item, late, early),
+            workDayFactor,
+            late,
+            early,
+            isAbsent,
+            item.CheckInTime.HasValue,
+            item.CheckOutTime.HasValue,
+            item.ForgotMinutes);
+    }
+
+    private static string BuildMissingMinutesNote(int missingMinutes)
+    {
+        return missingMinutes > 0
+            ? $"Thiếu {missingMinutes} phút"
+            : "Thiếu CheckOut";
+    }
+
+    private static string BuildNote(AttendanceDailyViewModel item, int late, int early)
+    {
+        if (late > 0)
+        {
+            return "Trễ giờ vào ca";
+        }
+
+        if (early > 0)
+        {
+            return "Về sớm trước giờ kết ca";
+        }
+
+        if (item.HasPendingRequest)
+        {
+            return "Có yêu cầu đang chờ duyệt.";
+        }
+
+        if (item.HasApprovedRequest)
+        {
+            return "Đã có yêu cầu được duyệt.";
+        }
+
+        return "-";
+    }
+
+    private static string ToDateInput(DateOnly value)
+    {
+        return value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    }
+
+    private static string GetSummaryCardClass(int index)
+    {
+        return index switch
+        {
+            0 => "stat-accent",
+            1 => "stat-warning",
+            2 => "stat-warning",
+            3 => "stat-danger",
+            _ => "stat-accent"
+        };
+    }
+
+    private static string GetAttendanceStatusClass(EmployeeDailyAttendanceRecord record)
+    {
+        return GetAttendanceStatusKey(record) switch
+        {
+            "leave" => "status-leave",
+            "full" => "status-full",
+            "short" => "status-short",
+            _ => "status-neutral"
+        };
+    }
+
+    private static string GetAttendanceStatusLabel(EmployeeDailyAttendanceRecord record)
+    {
+        return GetAttendanceStatusKey(record) switch
+        {
+            "leave" => "Nghỉ phép",
+            "full" => "Đủ công",
+            "short" => "Nửa công",
+            _ => "Thiếu CheckOut"
+        };
+    }
+
+    private static string GetAttendanceStatusKey(EmployeeDailyAttendanceRecord record)
+    {
+        if (record.Note.Contains("được duyệt", StringComparison.OrdinalIgnoreCase))
+        {
+            return "leave";
+        }
+
+        if (record.IsAbsent)
+        {
+            return "neutral";
+        }
+
+        if (record.WorkDayFactor >= 1)
+        {
+            return "full";
+        }
+
+        return record.WorkDayFactor > 0 ? "short" : "neutral";
+    }
+
+    private static string GetShiftLabel(string shiftCode)
+    {
+        return shiftCode.Trim().ToUpperInvariant() switch
+        {
+            "CS" => "Ca sáng",
+            "CC" => "Ca chiều",
+            "CT" => "Ca tối",
+            "CSF" => "Ca sáng chiều",
+            "CTF" => "Ca chiều tối",
+            "CG" => "Ca gãy",
+            "--" => "Chưa có ca",
+            "" => "Chưa có ca",
+            _ => shiftCode
+        };
+    }
+
+    private static string GetShiftBadgeClass(string shiftCode)
+    {
+        return shiftCode.Trim().ToUpperInvariant() switch
+        {
+            "CS" => "shift-morning",
+            "CC" => "shift-afternoon",
+            "CT" => "shift-evening",
+            "CSF" => "shift-full",
+            "CTF" => "shift-full",
+            "CG" => "shift-split",
+            _ => "shift-empty"
+        };
+    }
+
+    private static string FormatTimeRange(EmployeeDailyAttendanceRecord record)
+    {
+        return record.Time.Replace("/", " / ", StringComparison.Ordinal);
+    }
+
+    private static DateOnly ParseDate(string? value, DateOnly fallback)
+    {
+        return DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
+            ? parsed
+            : fallback;
+    }
+
+    private sealed record AttendanceSuggestionGroupViewModel(
+        string Id,
+        string Title,
+        List<AttendanceSuggestionItemViewModel> Items);
+
+    private sealed record AttendanceSuggestionItemViewModel(
+        DateOnly Date,
+        int MissingMinutes,
+        string Note);
+
+    private async Task RefreshDataAsync()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task OnPullToRefreshRequestedAsync()
+    {
+        var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        if (!currentPath.StartsWith("employee/daily", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        await InvokeAsync(RefreshDataAsync);
+    }
+
+    public void Dispose()
+    {
+        PullToRefreshService.RefreshRequested -= OnPullToRefreshRequestedAsync;
+    }
+}

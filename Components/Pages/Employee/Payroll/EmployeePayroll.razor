@@ -1,0 +1,634 @@
+﻿@page "/luong-co-ban"
+@implements IDisposable
+
+@using System.Globalization
+@using ERP_PAYROLLMOBILE.Models.EmployeeBreakdown
+@using ERP_PAYROLLMOBILE.Services.Features.Payroll
+@using ERP_PAYROLLMOBILE.Services.RoleScope
+@using ERP_PAYROLLMOBILE.Services.Ui
+@inject EmployeeBreakdownApiClient EmployeeBreakdownApiClient
+@inject EmployeeBreakdownRequestBuilder RequestBuilder
+@inject EmployeePayrollStateService State
+@inject PullToRefreshService PullToRefreshService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Lương cơ bản</PageTitle>
+
+<RoleGuard AllowedRole="@ERP_PAYROLLMOBILE.Services.RoleScope.AppRole.Employee">
+<section class="payroll-page">
+    <div class="payroll-shell">
+        <p class="payroll-subtitle">Tổng quan bảng lương cá nhân theo tháng @selectedMonth.Month/@selectedMonth.Year</p>
+
+        <div class="payroll-filters">
+            <div class="payroll-field">
+                <label>Tháng</label>
+                <select value="@selectedMonth.Month" @onchange="OnMonthChangedAsync">
+                    @for (var month = 1; month <= 12; month++)
+                    {
+                        <option value="@month">Tháng @month</option>
+                    }
+                </select>
+            </div>
+
+            <div class="payroll-field">
+                <label>Năm</label>
+                <input type="number" min="2000" max="2100" value="@selectedMonth.Year" @onchange="OnYearChangedAsync" />
+            </div>
+
+            <div class="payroll-field payroll-field-action">
+                <label>&nbsp;</label>
+                <button type="button" class="payroll-primary-button app-btn-primary" @onclick="SyncAsync" disabled="@(isLoading || isSyncing)">
+                    @(isSyncing ? "Đang tổng hợp" : "Tổng hợp")
+                </button>
+            </div>
+        </div>
+
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="payroll-alert">@errorMessage</div>
+        }
+
+        @if (isLoading)
+        {
+            <div class="payroll-loading">Đang tải dữ liệu phân tích lương...</div>
+        }
+        else
+        {
+            <div class="salary-row">
+                <article class="salary-chip primary">
+                    <div class="salary-label">Lương cơ bản gốc</div>
+                    <div class="salary-value">@FormatMoney(Breakdown?.OriginalBasicSalary)</div>
+                </article>
+                <article class="salary-chip secondary">
+                    <div class="salary-label">Payroll tháng này</div>
+                    <div class="salary-value">@FormatMoney(Breakdown?.BasicSalary)</div>
+                </article>
+            </div>
+
+            <article class="payroll-card ratio-card">
+                <h2 class="section-title">Tỉ lệ ngày công</h2>
+                <p class="section-sub">So sánh ngày đi làm và nghỉ có lương với công chuẩn</p>
+
+                <div class="donut-pair">
+                    <div class="donut-item">
+                        <div class="donut-sm" style="@AttendanceDonutStyle">
+                            <div class="donut-inner-sm">
+                                <span class="pct">@FormatPercent(AttendanceRate)</span>
+                                <span class="frac">@FormatDay(Breakdown?.ActualWorkDays)/@FormatDay(Breakdown?.StandardDays)</span>
+                            </div>
+                        </div>
+                        <div class="donut-caption">
+                            Ngày đi làm
+                            <span class="sub">Công thực tế</span>
+                        </div>
+                    </div>
+
+                    <div class="donut-item">
+                        <div class="donut-sm" style="@PaidLeaveDonutStyle">
+                            <div class="donut-inner-sm">
+                                <span class="pct">@FormatPercent(PaidLeaveRate)</span>
+                                <span class="frac">@FormatDay(PaidLeaveTotal)/@FormatDay(Breakdown?.StandardDays)</span>
+                            </div>
+                        </div>
+                        <div class="donut-caption">
+                            Nghỉ có lương
+                            <span class="sub">Phép + lễ</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="payroll-card work-card">
+                <h2 class="section-title">Phân tích ngày công</h2>
+                <p class="section-sub">Thống kê đầy đủ các mục ngày công trong tháng</p>
+
+                <div class="stat-grid">
+                    <div class="stat-cell">
+                        <div class="num">@FormatDay(Breakdown?.StandardDays)</div>
+                        <div class="lbl">Công chuẩn</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="num accent">@FormatDay(Breakdown?.ActualWorkDays)</div>
+                        <div class="lbl">Thực tế</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="num">@FormatDay(Breakdown?.EventPaidLeaveDays)</div>
+                        <div class="lbl">ngày nghỉ có lương </div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="num">@FormatDay(Breakdown?.PaidLeaveDays)</div>
+                        <div class="lbl">nghỉ lễ</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="num">@FormatDay(Breakdown?.LeaveUsed)</div>
+                        <div class="lbl">Công phép</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="num warn">@FormatDay(Breakdown?.OvertimeDays)</div>
+                        <div class="lbl">Tăng ca</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="num">@FormatDay(Breakdown?.WeekendDays)</div>
+                        <div class="lbl">Cuối tuần</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="num accent">@FormatDay(Breakdown?.WeightedWorkDays)</div>
+                        <div class="lbl">Quy đổi</div>
+                    </div>
+                </div>
+            </article>
+
+            <span class="badge-live">Dữ liệu thực</span>
+
+            <div class="two-col">
+                <article class="payroll-card row-card">
+                    <div class="row-card-title">Công phép</div>
+                    <div class="row-card-sub">Tháng @selectedMonth.Month/@selectedMonth.Year</div>
+                    <button type="button" class="row-card-btn" @onclick="OpenLeaveHistoryAsync">Lịch sử</button>
+
+                    <div class="mini-row">
+                        <span class="payroll-mini-label">Tồn đầu</span>
+                        <strong class="payroll-mini-value">@FormatDay(LeaveBalance?.TonDauThang)</strong>
+                    </div>
+                    <div class="mini-row">
+                        <span class="payroll-mini-label">Tích lũy</span>
+                        <strong class="payroll-mini-value">@FormatDay(LeaveBalance?.TonTrongThang)</strong>
+                    </div>
+                    <div class="mini-row">
+                        <span class="payroll-mini-label">Đã dùng</span>
+                        <strong class="payroll-mini-value">@FormatDay(LeaveBalance?.SuDung)</strong>
+                    </div>
+                    <div class="mini-row">
+                        <span class="payroll-mini-label">Còn dư</span>
+                        <strong class="payroll-mini-value">@FormatDay(LeaveBalance?.ConDu)</strong>
+                    </div>
+                </article>
+
+                <article class="payroll-card row-card">
+                    <div class="row-card-title">Đăng ký ca</div>
+                    <div class="row-card-sub">Thống kê ca làm</div>
+                    <button type="button" class="row-card-btn" @onclick="OpenShiftDetail">Chi tiết</button>
+
+                    <div class="mini-row">
+                        <span class="payroll-mini-label">Full-time</span>
+                        <strong class="payroll-mini-value">@(ShiftSummary?.FullTimeShiftCount ?? 0)</strong>
+                    </div>
+                    <div class="mini-row">
+                        <span class="payroll-mini-label">Part-time</span>
+                        <strong class="payroll-mini-value">@(ShiftSummary?.PartTimeShiftCount ?? 0)</strong>
+                    </div>
+                    <div class="mini-row">
+                        <span class="payroll-mini-label">Đã đăng ký</span>
+                        <strong class="payroll-mini-value">@(ShiftSummary?.TotalRegisteredShiftCount ?? 0)</strong>
+                    </div>
+                    <div class="mini-row">
+                        <span class="payroll-mini-label">Còn lại</span>
+                        <strong class="payroll-mini-value">@(ShiftSummary?.RemainingShiftCapacity ?? 0)</strong>
+                    </div>
+                </article>
+            </div>
+
+            <article class="payroll-card special-card">
+                <h2 class="section-title">Chi tiết công đặc biệt</h2>
+                <p class="section-sub">Dữ liệu từ special-work-claims</p>
+
+                @if (SpecialWorkClaims.Count == 0)
+                {
+                    <div class="empty-box">Không có dữ liệu công đặc biệt.</div>
+                }
+                else
+                {
+                    <div class="simple-table">
+                        <div class="table-head special">
+                            <span>Ngày</span>
+                            <span>Loại công</span>
+                            <span>Hệ số</span>
+                            <span>Vào / Ra</span>
+                        </div>
+                        @foreach (var claim in SpecialWorkClaims)
+                        {
+                            <div class="table-row special">
+                                <span>@claim.SourceDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</span>
+                                <span>@claim.LoaiCong</span>
+                                <span>@claim.WorkDayFactor.ToString("0.##", CultureInfo.InvariantCulture)</span>
+                                <span>@FormatTime(claim.CheckInTime) / @FormatTime(claim.CheckOutTime)</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </article>
+        }
+    </div>
+</section>
+</RoleGuard>
+
+<AppBottomNav ActiveTab="Lương cơ bản" OnTabChanged="HandleTabChange" />
+
+
+@if (showLeaveHistory)
+{
+    <div class="modal-backdrop" @onclick="CloseLeaveHistory">
+        <div class="payroll-modal" @onclick:stopPropagation="true">
+            <div class="modal-title">
+                <h2>Lịch sử công phép</h2>
+                <button type="button" @onclick="CloseLeaveHistory">✕</button>
+            </div>
+            <div class="simple-table">
+                <div class="table-head leave-history">
+                    <span>Tháng</span>
+                    <span>Tồn đầu</span>
+                    <span>Sử dụng</span>
+                    <span>Tồn trong tháng</span>
+                    <span>Còn dư</span>
+                </div>
+                @foreach (var item in LeaveHistory)
+                {
+                    <div class="table-row leave-history">
+                        <span>@item.Month/@item.Year</span>
+                        <span>@FormatDay(item.TonDauThang)</span>
+                        <span>@FormatDay(item.SuDung)</span>
+                        <span>@FormatDay(item.TonTrongThang)</span>
+                        <span>@FormatDay(item.ConDu)</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@if (showShiftDetail)
+{
+    <div class="modal-backdrop" @onclick="CloseShiftDetail">
+        <div class="payroll-modal" @onclick:stopPropagation="true">
+            <div class="modal-title">
+                <h2>Chi tiết đăng ký ca</h2>
+                <button type="button" @onclick="CloseShiftDetail">✕</button>
+            </div>
+            <div class="shift-detail-columns">
+                <div>
+                    <h3>Full-time</h3>
+                    @foreach (var item in ShiftDetail?.FullTimeItems ?? new List<EmployeeShiftRegistrationBreakdownDetailDto>())
+                    {
+                        <div class="shift-detail-item"><span>@item.WorkDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</span><strong>@item.ShiftCode</strong></div>
+                    }
+                </div>
+                <div>
+                    <h3>Part-time</h3>
+                    @foreach (var item in ShiftDetail?.PartTimeItems ?? new List<EmployeeShiftRegistrationBreakdownDetailDto>())
+                    {
+                        <div class="shift-detail-item"><span>@item.WorkDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</span><strong>@item.ShiftCode</strong></div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private readonly Guid companyId = Guid.Parse("A2F3FB40-7FA2-F011-9DB7-208810C238D7");
+    private DateOnly selectedMonth
+    {
+        get => State.SelectedMonth;
+        set => State.SelectedMonth = value;
+    }
+
+    private PayrollBreakdownModel? Breakdown
+    {
+        get => State.Breakdown;
+        set => State.Breakdown = value;
+    }
+
+    private ERPATT_CongphepduModel? LeaveBalance
+    {
+        get => State.LeaveBalance;
+        set => State.LeaveBalance = value;
+    }
+
+    private EmployeeShiftRegistrationSummaryDto? ShiftSummary
+    {
+        get => State.ShiftSummary;
+        set => State.ShiftSummary = value;
+    }
+
+    private EmployeeShiftRegistrationDetailResponseDto? ShiftDetail
+    {
+        get => State.ShiftDetail;
+        set => State.ShiftDetail = value;
+    }
+
+    private List<ERPATT_CongphepduModel> LeaveHistory
+    {
+        get => State.LeaveHistory;
+        set => State.LeaveHistory = value;
+    }
+
+    private List<SpecialWorkClaimDetailModel> SpecialWorkClaims
+    {
+        get => State.SpecialWorkClaims;
+        set => State.SpecialWorkClaims = value;
+    }
+
+    private string? errorMessage
+    {
+        get => State.ErrorMessage;
+        set => State.ErrorMessage = value;
+    }
+
+    private bool isLoading
+    {
+        get => State.IsLoading;
+        set => State.IsLoading = value;
+    }
+
+    private bool isSyncing
+    {
+        get => State.IsSyncing;
+        set => State.IsSyncing = value;
+    }
+
+    private bool showLeaveHistory
+    {
+        get => State.ShowLeaveHistory;
+        set => State.ShowLeaveHistory = value;
+    }
+
+    private bool showShiftDetail
+    {
+        get => State.ShowShiftDetail;
+        set => State.ShowShiftDetail = value;
+    }
+
+    private decimal StandardDays => Breakdown?.StandardDays ?? 0m;
+    private decimal ActualWorkDays => Breakdown?.ActualWorkDays ?? 0m;
+    private decimal PaidLeaveTotal => (Breakdown?.PaidLeaveDays ?? 0m) + (Breakdown?.EventPaidLeaveDays ?? 0m);
+    private decimal RemainingStandardDays => Math.Max(StandardDays - PaidLeaveTotal, 0m);
+    private decimal AttendanceRate => Percent(ActualWorkDays, StandardDays);
+    private decimal PaidLeaveRate => Percent(PaidLeaveTotal, StandardDays);
+    private decimal MissingRate => Math.Max(100m - AttendanceRate - PaidLeaveRate, 0m);
+    private string AttendanceDonutStyle => DonutStyle(AttendanceRate);
+    private string PaidLeaveDonutStyle => DonutStyle(PaidLeaveRate);
+
+    private IReadOnlyList<BreakdownRow> BreakdownRows => new[]
+    {
+        new BreakdownRow("Công chuẩn tháng", FormatDay(Breakdown?.StandardDays), 100m, false),
+        new BreakdownRow("Thực tế đi làm", FormatDay(Breakdown?.ActualWorkDays), Percent(Breakdown?.ActualWorkDays ?? 0m, StandardDays), false),
+        new BreakdownRow("Nghỉ lễ có lương", FormatDay(Breakdown?.EventPaidLeaveDays), Percent(Breakdown?.EventPaidLeaveDays ?? 0m, StandardDays), false),
+        new BreakdownRow("Ngày nghỉ có lương", FormatDay(Breakdown?.PaidLeaveDays), Percent(Breakdown?.PaidLeaveDays ?? 0m, StandardDays), false),
+        new BreakdownRow("Công phép", FormatDay(Breakdown?.LeaveUsed), Percent(Breakdown?.LeaveUsed ?? 0m, StandardDays), false),
+        new BreakdownRow("Tăng ca (OT)", FormatDay(Breakdown?.OvertimeDays), Percent(Breakdown?.OvertimeDays ?? 0m, StandardDays), true),
+        new BreakdownRow("Cuối tuần", FormatDay(Breakdown?.WeekendDays), Percent(Breakdown?.WeekendDays ?? 0m, StandardDays), false),
+        new BreakdownRow("Ngày lễ", FormatDay(Breakdown?.HolidayDays), Percent(Breakdown?.HolidayDays ?? 0m, StandardDays), false),
+        new BreakdownRow("Bù công", FormatDay(Breakdown?.MakeupDays), Percent(Breakdown?.MakeupDays ?? 0m, StandardDays), false),
+        new BreakdownRow("Công quy đổi (hệ số)", FormatDay(Breakdown?.WeightedWorkDays), Percent(Breakdown?.WeightedWorkDays ?? 0m, StandardDays), false)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        PullToRefreshService.RefreshRequested += OnPullToRefreshRequestedAsync;
+
+        if (!State.IsInitialized)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task OnMonthChangedAsync(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var month))
+        {
+            selectedMonth = new DateOnly(selectedMonth.Year, month, 1);
+            await LoadAsync();
+        }
+    }
+
+    private async Task OnYearChangedAsync(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var year))
+        {
+            selectedMonth = new DateOnly(year, selectedMonth.Month, 1);
+            await LoadAsync();
+        }
+    }
+
+    private async Task SyncAsync()
+    {
+        isSyncing = true;
+        errorMessage = null;
+
+        try
+        {
+            var syncRequest = await RequestBuilder.BuildSyncAsync(selectedMonth);
+            var affectedRows = await EmployeeBreakdownApiClient.SyncAsync(companyId, syncRequest);
+            Snackbar.Add($"Đã tổng hợp dữ liệu breakdown cho nhân viên {syncRequest.EmployeeId}: {affectedRows} dòng.", Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Không tổng hợp được dữ liệu breakdown: {ex.Message}";
+        }
+        finally
+        {
+            isSyncing = false;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var request = await RequestBuilder.BuildQueryAsync(companyId, selectedMonth);
+            if (string.IsNullOrWhiteSpace(request.EmployeeId))
+            {
+                throw new Exception("Không tìm thấy employeeId của người dùng hiện tại.");
+            }
+
+            var breakdownTask = LoadOrDefaultAsync(
+                () => EmployeeBreakdownApiClient.GetBreakdownAsync(request.CompanyId, request.EmployeeId, request.Year, request.Month),
+                () => CreateEmptyBreakdown(request.CompanyId, request.EmployeeId, request.Year, request.Month));
+
+            var leaveBalanceTask = LoadOrDefaultAsync(
+                () => EmployeeBreakdownApiClient.GetLeaveBalanceAsync(request.EmployeeId, request.Year, request.Month),
+                () => CreateEmptyLeaveBalance(request.EmployeeId, request.Year, request.Month));
+
+            var specialWorkClaimsTask = LoadOrDefaultAsync(
+                () => EmployeeBreakdownApiClient.GetSpecialWorkClaimsAsync(request.CompanyId, request.EmployeeId, request.Year, request.Month),
+                static () => new List<SpecialWorkClaimDetailModel>());
+
+            var shiftSummaryTask = LoadOrDefaultAsync(
+                () => EmployeeBreakdownApiClient.GetShiftRegistrationSummaryAsync(request.CompanyId, request.EmployeeId, request.Year, request.Month),
+                static () => new EmployeeShiftRegistrationSummaryDto());
+
+            var shiftDetailTask = LoadOrDefaultAsync(
+                () => EmployeeBreakdownApiClient.GetShiftRegistrationDetailAsync(request.CompanyId, request.EmployeeId, request.Year, request.Month),
+                static () => new EmployeeShiftRegistrationDetailResponseDto());
+
+            await Task.WhenAll(breakdownTask, leaveBalanceTask, specialWorkClaimsTask, shiftSummaryTask, shiftDetailTask);
+
+            Breakdown = await breakdownTask;
+            LeaveBalance = await leaveBalanceTask;
+            SpecialWorkClaims = await specialWorkClaimsTask;
+            ShiftSummary = await shiftSummaryTask;
+            ShiftDetail = await shiftDetailTask;
+        }
+        catch (Exception ex)
+        {
+            Breakdown = null;
+            LeaveBalance = null;
+            ShiftSummary = null;
+            ShiftDetail = null;
+            SpecialWorkClaims = new List<SpecialWorkClaimDetailModel>();
+            errorMessage = $"Không tải được dữ liệu phân tích lương: {ex.Message}";
+        }
+        finally
+        {
+            State.IsInitialized = true;
+            isLoading = false;
+        }
+    }
+
+    private static async Task<T> LoadOrDefaultAsync<T>(Func<Task<T>> loader, Func<T> defaultFactory)
+    {
+        try
+        {
+            return await loader();
+        }
+        catch (EmployeeBreakdownApiException ex) when (ex.IsNotFound)
+        {
+            return defaultFactory();
+        }
+    }
+
+    private static PayrollBreakdownModel CreateEmptyBreakdown(Guid companyId, string employeeId, int year, int month)
+    {
+        return new PayrollBreakdownModel
+        {
+            CompanyId = companyId,
+            EmployeeId = employeeId,
+            Year = year,
+            Month = month
+        };
+    }
+
+    private static ERPATT_CongphepduModel CreateEmptyLeaveBalance(string employeeId, int year, int month)
+    {
+        return new ERPATT_CongphepduModel
+        {
+            EmployeeId = employeeId,
+            Year = year,
+            Month = month
+        };
+    }
+
+    private async Task OpenLeaveHistoryAsync()
+    {
+        try
+        {
+            var request = await RequestBuilder.BuildQueryAsync(companyId, selectedMonth);
+            LeaveHistory = await EmployeeBreakdownApiClient.GetLeaveBalanceHistoryAsync(request.EmployeeId);
+            showLeaveHistory = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Không tải được lịch sử công phép: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void CloseLeaveHistory()
+    {
+        showLeaveHistory = false;
+    }
+
+    private void OpenShiftDetail()
+    {
+        showShiftDetail = true;
+    }
+
+    private void CloseShiftDetail()
+    {
+        showShiftDetail = false;
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        if (isLoading || isSyncing)
+        {
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task OnPullToRefreshRequestedAsync()
+    {
+        var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        if (!currentPath.StartsWith("luong-co-ban", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        await InvokeAsync(RefreshDataAsync);
+    }
+
+    public void Dispose()
+    {
+        PullToRefreshService.RefreshRequested -= OnPullToRefreshRequestedAsync;
+    }
+
+    private Task HandleTabChange(string tab)
+    {
+        var route = tab switch
+        {
+            "Chấm công" => "/employee/daily",
+            "Yêu cầu" => "/yeu-cau",
+            "Đăng ký ca" => "/dang-ky-ca",
+            "Lương cơ bản" => "/luong-co-ban",
+            _ => "/luong-co-ban"
+        };
+
+        Navigation.NavigateTo(route);
+        return Task.CompletedTask;
+    }
+
+    private static decimal Percent(decimal value, decimal total)
+    {
+        return total <= 0 ? 0m : Math.Round(value * 100m / total, 1, MidpointRounding.AwayFromZero);
+    }
+
+    private static decimal ClampPercent(decimal value)
+    {
+        return Math.Clamp(value, 0m, 100m);
+    }
+
+    private static string DonutStyle(decimal value)
+    {
+        var degree = Math.Clamp(value, 0m, 100m) * 3.6m;
+        return $"background: conic-gradient(#55b987 0deg {degree.ToString("0.##", CultureInfo.InvariantCulture)}deg, #d8f1df {degree.ToString("0.##", CultureInfo.InvariantCulture)}deg 360deg);";
+    }
+
+    private static string FormatMoney(decimal? value)
+    {
+        return string.Create(CultureInfo.InvariantCulture, $"{(value ?? 0m):N0} đ");
+    }
+
+    private static string FormatDay(decimal? value)
+    {
+        return (value ?? 0m).ToString("0.##", CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatPercent(decimal value)
+    {
+        return value.ToString("0.#", CultureInfo.InvariantCulture) + "%";
+    }
+
+    private static string FormatTime(DateTime? value)
+    {
+        return value?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? "-";
+    }
+
+    private sealed record BreakdownRow(string Label, string Value, decimal Percent, bool IsWarning);
+}

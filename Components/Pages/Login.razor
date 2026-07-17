@@ -1,0 +1,95 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@using ERP_PAYROLLMOBILE.Services.Notifications
+@inject IdentityAuthService IdentityAuthService
+@inject MoonAuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject IPushNotificationService PushNotificationService
+
+<PageTitle>Đăng nhập</PageTitle>
+
+<div class="login-page row justify-content-center mt-5">
+    <div class="col-12 col-sm-10 col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h4 mb-4 text-center">Đăng nhập</h1>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">@errorMessage</div>
+                }
+
+                <EditForm Model="loginRequest" OnValidSubmit="HandleLoginAsync">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="userName">Tên đăng nhập</label>
+                        <InputText id="userName" name="UserName" class="form-control" @bind-Value="loginRequest.UserName" autocomplete="username" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="password">Mật khẩu</label>
+                        <InputText id="password" name="Password" type="password" class="form-control" @bind-Value="loginRequest.Password" autocomplete="current-password" />
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <InputCheckbox id="rememberMe" name="RememberMe" class="form-check-input" @bind-Value="loginRequest.RememberMe" />
+                        <label class="form-check-label" for="rememberMe">Ghi nhớ đăng nhập</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" disabled="@isBusy">
+                        @(isBusy ? "Đang đăng nhập..." : "Đăng nhập")
+                    </button>
+                </EditForm>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? QueryError { get; set; }
+
+    private readonly LoginRequest loginRequest = new();
+    private string? errorMessage;
+    private bool isBusy;
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(QueryError))
+        {
+            errorMessage = QueryError;
+        }
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        errorMessage = null;
+
+        var result = await IdentityAuthService.LoginAsync(loginRequest);
+        if (!result.Success || string.IsNullOrWhiteSpace(result.Jwt) || string.IsNullOrWhiteSpace(result.UserId) || string.IsNullOrWhiteSpace(result.EmployeeId))
+        {
+            errorMessage = result.ErrorMessage ?? "Đăng nhập thất bại.";
+            isBusy = false;
+            return;
+        }
+
+        await AuthStateProvider.SignInAsync(result.UserId, result.EmployeeId, result.CompanyId, result.Jwt, result.Role, loginRequest.RememberMe);
+        var fcmToken = await PushNotificationService.InitializeAsync();
+
+        if (!string.IsNullOrWhiteSpace(fcmToken))
+        {
+            await JS.InvokeVoidAsync("alert", $"FCM Token: {fcmToken}");
+        }
+
+        Navigation.NavigateTo("/", replace: true);
+    }
+}

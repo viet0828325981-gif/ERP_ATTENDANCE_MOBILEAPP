@@ -1,0 +1,391 @@
+﻿@page "/dang-ky-ca"
+@implements IDisposable
+
+@using System.Globalization
+@using ERP_PAYROLLMOBILE.Services.Features.Shift
+@using ERP_PAYROLLMOBILE.Services.RoleScope
+@using ERP_PAYROLLMOBILE.Services.Ui
+@inject ShiftcodeApiClient ShiftcodeApiClient
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IDialogService DialogService
+@inject EmployeeShiftRegistrationStateService State
+@inject PullToRefreshService PullToRefreshService
+@inject ISnackbar Snackbar
+@inject MoonAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Đăng ký ca</PageTitle>
+
+<RoleGuard AllowedRole="@ERP_PAYROLLMOBILE.Services.RoleScope.AppRole.Employee">
+<section class="shift-registration-page">
+    <div class="shift-registration-content">
+        <p class="shift-registration-subtitle">Theo dõi lịch ca theo tháng và đăng ký ca .</p>
+
+        <button type="button" class="shift-registration-primary-button" @onclick="OpenRegistrationDialogAsync" disabled="@isLoading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+            </svg>
+            ĐĂNG KÝ CA
+        </button>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="page-error">@errorMessage</div>
+        }
+
+        <div class="calendar-section">
+            <CalendarWidget Year="@selectedMonth.Year"
+                            Month="@selectedMonth.Month"
+                            SelectedDay="@selectedDay"
+                            ShiftCodesByDay="@ShiftCodesByDay"
+                            EventDays="@EventDays"
+                            OnDaySelected="HandleDaySelected" />
+
+            <div class="calendar-actions">
+                <button type="button" class="nav-btn" @onclick="() => ChangeMonth(-1)">‹</button>
+                <button type="button" class="nav-btn" @onclick="() => ChangeMonth(1)">›</button>
+            </div>
+        </div>
+
+        <div class="info-card @(isShiftDetailsOpen ? "open" : null)">
+            <div class="info-header" @onclick="ToggleShiftDetails">
+                <div class="info-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <path d="M16 2v4M8 2v4M3 10h18" />
+                    </svg>
+                </div>
+                <div class="info-text">
+                    <div class="info-title">Chi tiết đăng ký ca</div>
+                    <div class="info-sub">@shiftOptions.Count loại ca làm · Nhấn để xem</div>
+                </div>
+                <div class="chevron">⌄</div>
+            </div>
+            <div class="info-body">
+                @foreach (var option in shiftOptions)
+                {
+                    <div class="shift-row">
+                        <span class="shift-code @GetShiftCodeBadgeClass(option.Code)">@option.Code</span>
+                        <span class="shift-time">@GetShiftTimeLabel(option)</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-header">
+                <div class="info-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 3v9l6 3" />
+                    </svg>
+                </div>
+                <div class="info-text">
+                    <div class="info-title">Tổng quan</div>
+                    <div class="info-sub">Tỷ lệ ngày đã đăng ký</div>
+                </div>
+            </div>
+
+            <div class="donut-wrap">
+                <div class="donut" style="@DonutBackgroundStyle">
+                    <div class="donut-inner"></div>
+                </div>
+            </div>
+            <div class="donut-ratio">@RegisteredDays/@TotalRegistrationDays</div>
+            <div class="legend">
+                <div class="legend-row">
+                    <div class="legend-left"><span class="dot-legend filled"></span>Đã đăng ký</div>
+                    <span>@RegisteredDays ngày</span>
+                </div>
+                <div class="legend-row">
+                    <div class="legend-left"><span class="dot-legend empty"></span>Chưa đăng ký</div>
+                    <span>@RemainingDays ngày</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <AppBottomNav ActiveTab="Đăng ký ca" OnTabChanged="HandleTabChange" />
+</section>
+</RoleGuard>
+
+@code {
+    private static readonly CultureInfo EnglishCulture = new("en-US");
+    private static readonly IReadOnlyList<ShiftDefinition> shiftOptions =
+    [
+        new("CS", "Ca sáng", "08:00 - 12:00"),
+        new("CC", "Ca chiều", "13:30 - 17:30"),
+        new("CT", "Ca tối", "17:30 - 21:30"),
+        new("CSF", "Ca fulltime sáng chiều", "08:00 - 17:30"),
+        new("CTF", "Ca fulltime chiều tối", "13:30 - 21:30"),
+        new("CG", "Ca gãy", string.Empty)
+    ];
+
+    private readonly Guid companyId = Guid.Parse("A2F3FB40-7FA2-F011-9DB7-208810C238D7");
+    private DateOnly selectedMonth
+    {
+        get => State.SelectedMonth;
+        set => State.SelectedMonth = value;
+    }
+
+    private List<ShiftRegistrationDayModel> shiftDays
+    {
+        get => State.ShiftDays;
+        set => State.ShiftDays = value;
+    }
+
+    private ShiftRegistrationOverviewModel overview
+    {
+        get => State.Overview;
+        set => State.Overview = value;
+    }
+
+    private string employeeId
+    {
+        get => State.EmployeeId;
+        set => State.EmployeeId = value;
+    }
+
+    private string createdBy
+    {
+        get => State.CreatedBy;
+        set => State.CreatedBy = value;
+    }
+
+    private string? errorMessage
+    {
+        get => State.ErrorMessage;
+        set => State.ErrorMessage = value;
+    }
+
+    private bool isLoading
+    {
+        get => State.IsLoading;
+        set => State.IsLoading = value;
+    }
+
+    private bool isShiftDetailsOpen
+    {
+        get => State.IsShiftDetailsOpen;
+        set => State.IsShiftDetailsOpen = value;
+    }
+
+    private int? selectedDay
+    {
+        get => State.SelectedDay;
+        set => State.SelectedDay = value;
+    }
+
+    // Build the day-to-shift map once from the loaded month so the calendar widget can render badges efficiently.
+    private Dictionary<int, string> ShiftCodesByDay => shiftDays
+        .Where(item => item.WorkDate.Year == selectedMonth.Year && item.WorkDate.Month == selectedMonth.Month)
+        .GroupBy(item => item.WorkDate.Day)
+        .ToDictionary(group => group.Key, group => group.Last().EffectiveShiftCode);
+
+    private HashSet<int> EventDays => shiftDays
+        .Where(item => item.WorkDate.Year == selectedMonth.Year
+            && item.WorkDate.Month == selectedMonth.Month
+            && HasRegisteredShift(item))
+        .Select(item => item.WorkDate.Day)
+        .ToHashSet();
+
+    private int TotalRegistrationDays => Math.Max(overview.MaxDaysInMonth, 0);
+
+    private int RegisteredDays => Math.Max(overview.RegisteredDays, 0);
+
+    private int RemainingDays => Math.Max(TotalRegistrationDays - RegisteredDays, 0);
+
+    private double RegisteredRate => TotalRegistrationDays == 0
+        ? 0
+        : Math.Round(RegisteredDays * 100d / TotalRegistrationDays, 1, MidpointRounding.AwayFromZero);
+
+    private string DonutBackgroundStyle => $"background: conic-gradient(var(--donut) 0% {RegisteredRate.ToString("0.#", CultureInfo.InvariantCulture)}%, #d8f1df {RegisteredRate.ToString("0.#", CultureInfo.InvariantCulture)}% 100%);";
+
+    protected override async Task OnInitializedAsync()
+    {
+        PullToRefreshService.RefreshRequested += OnPullToRefreshRequestedAsync;
+
+        if (!State.IsInitialized)
+        {
+            await LoadIdentityAsync();
+            InitializeSelectedDay();
+            await LoadMonthAsync();
+        }
+    }
+
+    private Task HandleTabChange(string tab)
+    {
+        var route = tab switch
+        {
+            "Chấm công" => "/employee/daily",
+            "Yêu cầu" => "/yeu-cau",
+            "Đăng ký ca" => "/dang-ky-ca",
+            "Lương cơ bản" => "/luong-co-ban",
+            _ => "/employee/daily"
+        };
+
+        Navigation.NavigateTo(route);
+        return Task.CompletedTask;
+    }
+
+    private async Task LoadIdentityAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        employeeId = user.FindFirst("employee_id")?.Value ?? string.Empty;
+        createdBy = user.Identity?.Name ?? employeeId;
+    }
+
+    private void InitializeSelectedDay()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        selectedDay = today.Year == selectedMonth.Year && today.Month == selectedMonth.Month
+            ? today.Day
+            : null;
+    }
+
+    private async Task LoadMonthAsync()
+    {
+        if (string.IsNullOrWhiteSpace(employeeId))
+        {
+            errorMessage = "Không tìm thấy employeeId của người dùng hiện tại.";
+            shiftDays = new List<ShiftRegistrationDayModel>();
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            // Load the detail list and the monthly overview together so the calendar and donut summary stay in sync.
+            var shiftDaysTask = ShiftcodeApiClient.GetDailyAttendanceAsync(companyId, employeeId, selectedMonth.Month, selectedMonth.Year);
+            var overviewTask = ShiftcodeApiClient.GetShiftRegistrationOverviewAsync(companyId, employeeId, selectedMonth.Month, selectedMonth.Year);
+
+            await Task.WhenAll(shiftDaysTask, overviewTask);
+
+            shiftDays = (await shiftDaysTask)
+                .GroupBy(item => item.WorkDate)
+                .Select(group => group.Last())
+                .OrderBy(item => item.WorkDate)
+                .ToList();
+
+            overview = await overviewTask;
+        }
+        catch (Exception ex)
+        {
+            shiftDays = new List<ShiftRegistrationDayModel>();
+            overview = new ShiftRegistrationOverviewModel();
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            State.IsInitialized = true;
+            isLoading = false;
+        }
+    }
+
+    private async Task ChangeMonth(int offset)
+    {
+        selectedMonth = selectedMonth.AddMonths(offset);
+        InitializeSelectedDay();
+        await LoadMonthAsync();
+    }
+
+    private Task HandleDaySelected(DateTime date)
+    {
+        selectedDay = date.Day;
+        return Task.CompletedTask;
+    }
+
+    private void ToggleShiftDetails()
+    {
+        isShiftDetailsOpen = !isShiftDetailsOpen;
+    }
+
+    private static string GetShiftTimeLabel(ShiftDefinition option)
+    {
+        return string.IsNullOrWhiteSpace(option.TimeRange) ? "Linh hoạt" : option.TimeRange;
+    }
+
+    private static string GetShiftCodeBadgeClass(string code)
+    {
+        return code.Trim().ToUpperInvariant() switch
+        {
+            "CS" or "CC" or "CT" => "shift-code-basic",
+            "CSF" or "CTF" => "shift-code-full",
+            "BC" or "CG" => "shift-code-flex",
+            _ => "shift-code-basic"
+        };
+    }
+
+    private static bool HasRegisteredShift(ShiftRegistrationDayModel item)
+    {
+        return item.HasShiftRegistration || !string.IsNullOrWhiteSpace(item.RegisteredShiftCode);
+    }
+
+    private async Task OpenRegistrationDialogAsync()
+    {
+        if (string.IsNullOrWhiteSpace(employeeId))
+        {
+            Snackbar.Add("Không tìm thấy employeeId để đăng ký ca.", Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters
+        {
+            ["CompanyId"] = companyId,
+            ["EmployeeId"] = employeeId,
+            ["CreatedBy"] = createdBy,
+            ["SelectedMonth"] = selectedMonth,
+            ["ShiftOptions"] = shiftOptions
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.ExtraLarge
+        };
+
+        var dialog = await DialogService.ShowAsync<ERP_PAYROLLMOBILE.Components.Shared.ShiftRegistrationDialog>("Đăng ký ca", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadMonthAsync();
+        }
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(employeeId))
+        {
+            await LoadIdentityAsync();
+            InitializeSelectedDay();
+        }
+
+        await LoadMonthAsync();
+    }
+
+    private async Task OnPullToRefreshRequestedAsync()
+    {
+        var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        if (!currentPath.StartsWith("dang-ky-ca", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        await InvokeAsync(RefreshDataAsync);
+    }
+
+    public void Dispose()
+    {
+        PullToRefreshService.RefreshRequested -= OnPullToRefreshRequestedAsync;
+    }
+}

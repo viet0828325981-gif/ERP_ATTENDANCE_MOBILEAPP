@@ -1,0 +1,300 @@
+/* Khung tổng thể của màn đăng ký ca */
+.shift-registration-page {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: var(--bg-page);
+}
+
+/* Vùng nội dung chính, chừa khoảng cho bottom nav */
+.shift-registration-content {
+    padding: clamp(16px, 4vw, 24px) 0 90px;
+}
+
+/* Tiêu đề và mô tả đầu màn */
+.shift-registration-title {
+    margin: 0 0 6px;
+    color: var(--text-main);
+    font-size: clamp(20px, 5vw, 24px);
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+.shift-registration-subtitle {
+    margin: 0 0 clamp(14px, 3vw, 18px);
+    color: var(--text-muted);
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 500;
+}
+
+/* Nút đăng ký ca chính */
+.shift-registration-primary-button {
+    width: 100%;
+    margin-bottom: clamp(16px, 4vw, 22px);
+    min-height: clamp(44px, 10vw, 50px);
+    padding: clamp(12px, 3vw, 15px);
+    border: none;
+    border-radius: var(--radius-btn);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #fff;
+    font-size: clamp(13px, 3vw, 14px);
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    font-family: var(--app-font);
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+    box-shadow: 0 10px 20px rgba(67, 56, 202, 0.3);
+    cursor: pointer;
+}
+
+.shift-registration-primary-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+.shift-registration-primary-button:disabled {
+    cursor: default;
+    opacity: 0.7;
+}
+
+/* Thông báo lỗi ở đầu màn */
+.page-error {
+    margin-bottom: clamp(12px, 3vw, 16px);
+    padding: clamp(10px, 2.8vw, 12px) clamp(12px, 3vw, 14px);
+    color: var(--danger);
+    background: var(--danger-soft-bg);
+    border-radius: var(--radius-btn);
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 600;
+}
+
+/* Khối lịch và nút chuyển tháng */
+.calendar-section {
+    position: relative;
+    margin-bottom: clamp(12px, 3vw, 16px);
+}
+
+.calendar-actions {
+    position: absolute;
+    top: clamp(18px, 5vw, 24px);
+    right: clamp(12px, 4vw, 18px);
+    display: flex;
+    gap: clamp(6px, 2vw, 8px);
+}
+
+.nav-btn {
+    width: clamp(30px, 8vw, 34px);
+    height: clamp(30px, 8vw, 34px);
+    border: 0;
+    border-radius: 10px;
+    color: var(--bg-card);
+    font-size: clamp(14px, 4vw, 16px);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+    cursor: pointer;
+}
+
+/* Card thông tin và tổng quan */
+.info-card,
+.overview-card {
+    margin-bottom: clamp(12px, 3vw, 14px);
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: 0 10px 30px rgba(20, 20, 40, 0.06);
+}
+
+.info-card {
+    overflow: hidden;
+}
+
+.info-header {
+    padding: clamp(12px, 3.5vw, 16px);
+    display: flex;
+    align-items: center;
+    gap: clamp(10px, 3vw, 14px);
+    cursor: pointer;
+}
+
+.info-icon {
+    width: clamp(38px, 10vw, 44px);
+    height: clamp(38px, 10vw, 44px);
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.info-icon svg {
+    width: 20px;
+    height: 20px;
+    color: var(--bg-card);
+}
+
+.info-text {
+    flex: 1;
+}
+
+.info-title {
+    margin-bottom: 2px;
+    color: var(--accent);
+    font-size: clamp(13px, 3vw, 14px);
+    font-weight: 800;
+}
+
+.info-sub {
+    color: var(--text-muted);
+    font-size: clamp(11px, 2.8vw, 12px);
+    font-weight: 500;
+}
+
+.chevron {
+    color: var(--text-muted);
+    font-size: 16px;
+    transition: transform .2s ease;
+}
+
+.info-card.open .chevron {
+    transform: rotate(180deg);
+}
+
+/* Nội dung mở rộng phần chi tiết ca */
+.info-body {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 clamp(12px, 3.5vw, 16px);
+    transition: max-height .25s ease;
+}
+
+.info-card.open .info-body {
+    max-height: 500px;
+    padding: 0 clamp(12px, 3.5vw, 16px) clamp(12px, 3.5vw, 16px);
+}
+
+.shift-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(8px, 2.5vw, 10px) 0;
+    border-top: 1px solid var(--divider);
+    gap: clamp(8px, 2.8vw, 12px);
+}
+
+.shift-code {
+    display: inline-block;
+    min-width: clamp(48px, 12vw, 52px);
+    padding: 6px clamp(10px, 3vw, 14px);
+    border-radius: 999px;
+    text-align: center;
+    font-size: clamp(11px, 2.8vw, 12px);
+    font-weight: 800;
+}
+
+.shift-code-basic {
+    color: #185fa5;
+    background: #e6f1fb;
+}
+
+.shift-code-full {
+    color: #4338ca;
+    background: #e8e7fc;
+}
+
+.shift-code-flex {
+    color: #0f6e56;
+    background: #e1f5ee;
+}
+
+.shift-time {
+    color: var(--text-main);
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 700;
+    text-align: right;
+}
+
+/* Card tổng quan dạng donut */
+.overview-card {
+    padding: clamp(14px, 4vw, 18px) clamp(12px, 3.5vw, 16px);
+}
+
+.overview-header {
+    display: flex;
+    align-items: center;
+    gap: clamp(10px, 3vw, 14px);
+    margin-bottom: clamp(14px, 4vw, 18px);
+}
+
+.donut-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: clamp(12px, 3vw, 14px);
+}
+
+.donut {
+    width: clamp(140px, 42vw, 170px);
+    height: clamp(140px, 42vw, 170px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.donut-inner {
+    width: clamp(90px, 27vw, 110px);
+    height: clamp(90px, 27vw, 110px);
+    border-radius: 50%;
+    background: var(--bg-card);
+}
+
+.donut-ratio {
+    margin-bottom: clamp(12px, 3vw, 16px);
+    color: #010d24;
+    text-align: center;
+    font-size: clamp(24px, 7vw, 28px);
+    font-weight: 800;
+}
+
+.legend {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 2.5vw, 10px);
+}
+
+.legend-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-main);
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 600;
+    gap: clamp(8px, 2.8vw, 12px);
+}
+
+.legend-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dot-legend {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot-legend.filled {
+    background: var(--donut);
+}
+
+.dot-legend.empty {
+    background: #d8f1df;
+}
+
+@media (max-width: 480px) {
+    .shift-registration-content {
+        padding: clamp(14px, 4vw, 20px) 0 90px;
+    }
+}

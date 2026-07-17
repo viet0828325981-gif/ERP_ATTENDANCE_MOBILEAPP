@@ -1,0 +1,183 @@
+@using ERP_PAYROLLMOBILE.Models.ManagerRole.ManagerRequests
+@using ERP_PAYROLLMOBILE.Services.Features.Requests
+@using ERP_PAYROLLMOBILE.Services.RoleScope
+@inject IRequestFeatureService RequestFeatureService
+@inject IRoleScopeService RoleScopeService
+@inject ISnackbar Snackbar
+
+<div class="request-manager-actions">
+    <div class="request-action-title">Thao tác yêu cầu</div>
+
+    <div class="request-action-row">
+        <label>RequestId</label>
+        <input value="@requestIdText" @onchange="args => requestIdText = args.Value?.ToString()" placeholder="Guid yêu cầu" />
+    </div>
+    <div class="request-action-row">
+        <label>EmployeeId</label>
+        <input value="@employeeId" @onchange="args => employeeId = args.Value?.ToString() ?? string.Empty" />
+    </div>
+    <div class="request-action-row">
+        <label>RequestType</label>
+        <input value="@requestType" @onchange="args => requestType = args.Value?.ToString() ?? string.Empty" />
+    </div>
+    <div class="request-action-row">
+        <label>TargetDate</label>
+        <input type="date" value="@targetDate.ToString("yyyy-MM-dd")" @onchange="OnTargetDateChanged" />
+    </div>
+    <div class="request-action-row">
+        <label>CreatedAt</label>
+        <input type="datetime-local" value="@createdAt.ToString("yyyy-MM-ddTHH:mm")" @onchange="OnCreatedAtChanged" />
+    </div>
+
+    <div class="request-action-buttons">
+        <button type="button" @onclick="ApproveAsync" disabled="@isBusy">Duyệt</button>
+        <button type="button" @onclick="RejectAsync" disabled="@isBusy">Từ chối</button>
+        <button type="button" @onclick="RunNightlyJobAsync" disabled="@isBusy">Chạy job tháng</button>
+    </div>
+
+    <hr />
+
+    <div class="request-action-row">
+        <label>Bulk EmployeeIds</label>
+        <textarea value="@bulkEmployeeIdsText" @onchange="args => bulkEmployeeIdsText = args.Value?.ToString() ?? string.Empty" placeholder="Mỗi dòng một EmployeeId"></textarea>
+    </div>
+    <button type="button" @onclick="BulkAsync" disabled="@isBusy">Tạo hàng loạt</button>
+</div>
+
+@code {
+    private string? requestIdText;
+    private string employeeId = string.Empty;
+    private string requestType = string.Empty;
+    private DateOnly targetDate = DateOnly.FromDateTime(DateTime.Today);
+    private DateTime createdAt = DateTime.Now;
+    private string bulkEmployeeIdsText = string.Empty;
+    private bool isBusy;
+
+    private void OnTargetDateChanged(ChangeEventArgs args)
+    {
+        if (DateOnly.TryParse(args.Value?.ToString(), out var value))
+        {
+            targetDate = value;
+        }
+    }
+
+    private void OnCreatedAtChanged(ChangeEventArgs args)
+    {
+        if (DateTime.TryParse(args.Value?.ToString(), out var value))
+        {
+            createdAt = value;
+        }
+    }
+
+    private async Task ApproveAsync()
+    {
+        if (!TryGetRequestId(out var requestId))
+        {
+            return;
+        }
+
+        await RunAsync(async scope =>
+        {
+            var request = new ManagerApproveWorkRequestDto
+            {
+                RequestId = requestId,
+                EmployeeId = employeeId,
+                RequestType = requestType,
+                TargetDate = targetDate,
+                CreatedAt = createdAt,
+                ApprovedBy = scope.EmployeeId
+            };
+
+            await RequestFeatureService.ApproveAsync(scope.CompanyId, request);
+            Snackbar.Add("Đã duyệt yêu cầu.", Severity.Success);
+        });
+    }
+
+    private async Task RejectAsync()
+    {
+        if (!TryGetRequestId(out var requestId))
+        {
+            return;
+        }
+
+        await RunAsync(async scope =>
+        {
+            var request = new ManagerRejectWorkRequestDto
+            {
+                RequestId = requestId,
+                EmployeeId = employeeId,
+                RequestType = requestType,
+                CreatedAt = createdAt,
+                RejectedBy = scope.EmployeeId
+            };
+
+            var message = await RequestFeatureService.RejectAsync(scope.CompanyId, request);
+            Snackbar.Add(string.IsNullOrWhiteSpace(message) ? "Đã từ chối yêu cầu." : message, Severity.Success);
+        });
+    }
+
+    private async Task BulkAsync()
+    {
+        await RunAsync(async scope =>
+        {
+            var employeeIds = bulkEmployeeIdsText
+                .Split(new[] { '\r', '\n', ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+
+            var request = new ManagerBulkWorkRequestDto
+            {
+                EmployeeIds = employeeIds,
+                RequestType = requestType,
+                TargetDate = targetDate,
+                CreatedBy = scope.EmployeeId
+            };
+
+            var result = await RequestFeatureService.BulkAsync(scope.CompanyId, request);
+            Snackbar.Add($"Bulk xong: tạo {result.Created.Count}, ghi đè {result.Overridden.Count}, bỏ qua {result.Skipped.Count}.", Severity.Success);
+        });
+    }
+
+    private async Task RunNightlyJobAsync()
+    {
+        await RunAsync(async scope =>
+        {
+            var request = new ManagerMonthlyNightlyJobDto
+            {
+                Year = targetDate.Year,
+                Month = targetDate.Month
+            };
+
+            var result = await RequestFeatureService.RunMonthlyNightlyJobAsync(scope.CompanyId, request);
+            Snackbar.Add($"Job tháng hoàn tất: thêm {result.InsertedCount} dòng.", Severity.Success);
+        });
+    }
+
+    private bool TryGetRequestId(out Guid requestId)
+    {
+        if (Guid.TryParse(requestIdText, out requestId))
+        {
+            return true;
+        }
+
+        Snackbar.Add("RequestId không hợp lệ.", Severity.Warning);
+        return false;
+    }
+
+    private async Task RunAsync(Func<RoleScopeState, Task> action)
+    {
+        isBusy = true;
+        try
+        {
+            var scope = await RoleScopeService.LoadAsync();
+            await action(scope);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Không thực hiện được thao tác: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}

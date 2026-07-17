@@ -1,0 +1,2490 @@
+﻿/* Khung layout tổng của ứng dụng */
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #FFFF;
+}
+
+/* Chia bố cục giữa vùng nội dung chính và panel debug */
+.layout-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 24rem;
+    gap: 1rem;
+    flex: 1;
+    align-items: start;
+    padding: 0;
+    padding-bottom: 6.75rem;
+}
+
+/* Thẻ main chứa nội dung route hiện tại */
+main {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Reset padding mặc định cho vùng content của layout */
+.content {
+    padding: 0 16px;
+}
+
+.manager-layout-main {
+    min-width: 0;
+}
+
+.manager-layout-shell {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.manager-layout-header {
+    display: grid;
+    gap: 0.85rem;
+    padding: 0 16px;
+}
+
+.manager-layout-content {
+    padding: 0;
+}
+
+.manager-page-shell {
+    display: grid;
+    gap: 1rem;
+    padding: 0 16px 16px;
+}
+
+.manager-scope-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 0 0.85rem;
+    padding: 0.85rem 1rem;
+    background: #fff;
+    border: 1px solid #E8EDF8;
+    border-radius: 0.85rem;
+    box-shadow: 0 8px 22px rgba(43, 64, 150, 0.06);
+}
+
+.manager-scope-bar label {
+    margin: 0;
+    color: #1f2933;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.manager-scope-select {
+    min-width: min(22rem, 100%);
+    min-height: 2.5rem;
+    padding: 0 0.85rem;
+    color: #1f2933;
+    background: #fff;
+    border: 1px solid #C9D5F7;
+    border-radius: 0.65rem;
+}
+
+/* Panel debug hiển thị log API bên phải */
+.debug-panel {
+    position: sticky;
+    top: 6rem;
+    display: grid;
+    gap: 0.9rem;
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #E8EDF8;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(43, 64, 150, 0.08);
+}
+
+/* Header của panel debug */
+.debug-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.debug-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.debug-panel-header h2 {
+    margin: 0;
+    color: #1f2933;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* Nút xóa nhanh log debug */
+.debug-clear-button {
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    color: #5668E7;
+    font-size: 0.95rem;
+    background: #fff;
+    border: 1px solid #C9D5F7;
+    border-radius: 0.6rem;
+}
+
+.debug-toggle-button {
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    color: #1f2933;
+    font-size: 0.95rem;
+    background: #f8faff;
+    border: 1px solid #C9D5F7;
+    border-radius: 0.6rem;
+}
+
+.debug-panel-collapsed {
+    display: flex;
+    justify-content: center;
+}
+
+/* Danh sách log có scroll trong panel debug */
+.debug-log-list {
+    max-height: calc(100vh - 8rem);
+    overflow: auto;
+    padding: 0.85rem;
+    color: #fff;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 0.83rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #24292f;
+    border-radius: 0.75rem;
+}
+
+/* Trạng thái chưa có log */
+.debug-empty-state {
+    color: #d1d5db;
+}
+
+/* Responsive cho tablet và màn hình vừa */
+@media (max-width: 1024px) {
+    .layout-shell {
+        grid-template-columns: minmax(0, 1fr);
+        padding-bottom: 6.75rem;
+    }
+
+    .debug-panel {
+        position: static;
+    }
+
+    .debug-log-list {
+        max-height: 18rem;
+    }
+}
+
+/* Responsive cho mobile */
+@media (max-width: 760px) {
+    .layout-shell {
+        gap: 0.75rem;
+        padding: 0;
+        padding-bottom: 6.5rem;
+    }
+
+    .debug-panel {
+        padding: 0.85rem;
+        border-radius: 0.85rem;
+    }
+
+    .debug-panel-header h2 {
+        font-size: 1rem;
+    }
+
+    .debug-clear-button {
+        min-height: 2.25rem;
+        padding: 0 0.8rem;
+        font-size: 0.86rem;
+    }
+
+    .debug-toggle-button {
+        min-height: 2.25rem;
+        padding: 0 0.8rem;
+        font-size: 0.86rem;
+    }
+
+    .debug-log-list {
+        max-height: 14rem;
+        padding: 0.75rem;
+        font-size: 0.76rem;
+    }
+
+    .content {
+        padding: 0 12px;
+    }
+
+    .manager-layout-header {
+        padding: 0 12px;
+    }
+
+    .manager-page-shell {
+        padding: 0 12px 12px;
+    }
+
+    .manager-scope-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .manager-scope-select {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+/* Legacy consolidated page styles are disabled.
+   Page/component styles now come from dedicated .razor.css files. */
+@media not all {
+/* Source: Home.razor.css */
+::deep .attendance-page {
+    --primary: #5668E7;
+    --primary-light: #708BEB;
+    --primary-soft: #EEF2FF;
+    --text: #1F2933;
+    --sub: #8A9490;
+    --surface: #FFFFFF;
+    --background: #F5F7FC;
+    --border: #E5E9E5;
+    --border-strong: #D9E3DC;
+    --row-border: #EDF1FA;
+    --warning: #FF8A3D;
+    --danger: #E45858;
+
+    min-height: calc(100vh - 3.25rem);
+    padding: 0;
+    background: var(--background);
+}
+
+::deep .attendance-page .attendance-card {
+    min-height: calc(100vh - 5.25rem);
+    width: 100%;
+    padding: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.65rem;
+    box-shadow: 0 10px 30px rgba(43, 64, 150, 0.08);
+}
+
+::deep .attendance-page .page-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+::deep .attendance-page .page-heading h1 {
+    margin: 0;
+    color: var(--text);
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+}
+
+::deep .attendance-page .page-heading p {
+    margin: 0.35rem 0 0;
+    color: var(--sub);
+    font-size: 0.82rem;
+}
+
+::deep .attendance-page .toolbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    flex-wrap: nowrap;
+}
+
+::deep .attendance-page .segmented-control {
+    display: inline-flex;
+    overflow: hidden;
+    border: 1px solid var(--primary);
+    border-radius: 0.4rem;
+}
+
+::deep .attendance-page .segmented-control button,
+::deep .attendance-page .view-button {
+    min-height: 2.15rem;
+    border: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+::deep .attendance-page .segmented-control button {
+    padding: 0 0.75rem;
+    color: var(--primary);
+    background: var(--surface);
+}
+
+::deep .attendance-page .segmented-control .active,
+::deep .attendance-page .view-button {
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+}
+
+::deep .attendance-page .filter-panel {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 17.5rem;
+}
+
+::deep .attendance-page .filter-row {
+    display: grid;
+    grid-template-columns: 4.9rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.45rem;
+}
+
+::deep .attendance-page .filter-label {
+    color: var(--sub);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+::deep .attendance-page .filter-input {
+    width: 100%;
+    min-height: 2rem;
+    padding: 0 0.55rem;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 0.35rem;
+    outline: 0;
+}
+
+::deep .attendance-page .view-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    width: 100%;
+    padding: 0 1rem;
+    border-radius: 0.35rem;
+}
+
+::deep .attendance-page .summary-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+::deep .attendance-page .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-bottom: 1rem;
+}
+
+::deep .attendance-page .summary-card {
+    min-height: 4.2rem;
+    padding: 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    background: var(--surface);
+    box-shadow: 0 8px 20px rgba(43, 64, 150, 0.05);
+}
+
+::deep .attendance-page .summary-card span {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--sub);
+    font-size: 0.72rem;
+    line-height: 1.3;
+    font-weight: 700;
+}
+
+::deep .attendance-page .summary-card strong {
+    color: #2b2d33;
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+::deep .attendance-page .summary-card .success {
+    color: var(--primary);
+}
+
+::deep .attendance-page .summary-card .warning {
+    color: var(--warning);
+}
+
+::deep .attendance-page .summary-card .info {
+    color: var(--primary-light);
+}
+
+::deep .attendance-page .summary-card .danger {
+    color: var(--danger);
+}
+
+::deep .attendance-page .alert-message,
+::deep .attendance-page .empty-state {
+    margin-bottom: 0.85rem;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.85rem;
+    border-radius: 0.55rem;
+}
+
+::deep .attendance-page .alert-message {
+    color: #9b1c1c;
+    background: #fff0f0;
+    border: 1px solid #ffd0d0;
+}
+
+::deep .attendance-page .empty-state {
+    color: var(--sub);
+    text-align: center;
+    background: #fbfdfb;
+    border: 1px dashed var(--border-strong);
+}
+
+::deep .attendance-page .search-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    max-width: 42rem;
+    margin: 0.9rem 0 0.4rem auto;
+    padding: 0.4rem 0.2rem;
+    color: var(--sub);
+    border-bottom: 1px solid var(--border-strong);
+}
+
+::deep .attendance-page .search-row input {
+    width: 100%;
+    border: 0;
+    color: var(--text);
+    font-size: 0.86rem;
+    outline: 0;
+}
+
+::deep .attendance-page .attendance-list {
+    overflow-x: auto;
+}
+
+::deep .attendance-page .table-header,
+::deep .attendance-page .attendance-row {
+    display: grid;
+    grid-template-columns: 1.1fr 1.15fr 1.2fr 0.9fr 0.9fr 1fr 0.9fr 1.15fr 0.9fr 0.9fr;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 69rem;
+}
+
+::deep .attendance-page .table-header {
+    padding: 0.7rem 0.6rem;
+    color: var(--text);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+::deep .attendance-page .attendance-row {
+    min-height: 2.45rem;
+    padding: 0.45rem 0.6rem;
+    border-top: 1px solid var(--row-border);
+    color: var(--text);
+    font-size: 0.8rem;
+}
+
+::deep .attendance-page .mobile-label {
+    display: none;
+}
+
+::deep .attendance-page .code-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.22rem 0.5rem;
+    color: #fff;
+    font-size: 0.66rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    border-radius: 999px;
+}
+
+::deep .attendance-page .detail-cell {
+    justify-content: center;
+}
+
+::deep .attendance-page .detail-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 1.85rem;
+    padding: 0 0.65rem;
+    color: var(--primary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--primary-soft);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+}
+
+::deep .attendance-page .detail-button:disabled {
+    opacity: 0.7;
+}
+
+::deep .attendance-page .detail-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.46);
+}
+
+::deep .attendance-page .detail-dialog {
+    width: min(100%, 32rem);
+    max-height: min(85vh, 42rem);
+    overflow: auto;
+    padding: 1rem;
+    background: var(--surface);
+    border-radius: 1rem;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+}
+
+::deep .attendance-page .detail-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+}
+
+::deep .attendance-page .detail-dialog-header h2 {
+    margin: 0;
+    color: var(--text);
+    font-size: 1.375rem;
+    font-weight: 800;
+}
+
+::deep .attendance-page .detail-dialog-header p {
+    margin: 0.25rem 0 0;
+    color: var(--sub);
+    font-size: 0.82rem;
+}
+
+::deep .attendance-page .detail-dialog-close {
+    width: 2rem;
+    height: 2rem;
+    color: #5D6888;
+    font-size: 1rem;
+    background: var(--background);
+    border: 0;
+    border-radius: 999px;
+}
+
+::deep .attendance-page .detail-dialog-state {
+    padding: 0.9rem;
+    color: #5D6888;
+    text-align: center;
+    background: #F8FAFF;
+    border: 1px dashed var(--border-strong);
+    border-radius: 0.75rem;
+}
+
+::deep .attendance-page .detail-dialog-error {
+    color: #9b1c1c;
+    background: #fff0f0;
+    border-style: solid;
+    border-color: #ffd0d0;
+}
+
+::deep .attendance-page .detail-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+::deep .attendance-page .detail-item {
+    display: grid;
+    gap: 0.7rem;
+    padding: 0.9rem;
+    background: #F8FAFF;
+    border: 1px solid var(--border);
+    border-radius: 0.85rem;
+}
+
+::deep .attendance-page .detail-item div {
+    display: grid;
+    gap: 0.18rem;
+}
+
+::deep .attendance-page .detail-item span {
+    color: var(--sub);
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+::deep .attendance-page .detail-item strong {
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+::deep .attendance-page .status-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 1.55rem;
+    padding: 0 0.55rem;
+    color: var(--text);
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+}
+
+::deep .attendance-page .status-button span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 0.85rem;
+    height: 0.85rem;
+    color: #fff;
+    font-size: 0.55rem;
+    background: #111827;
+    border-radius: 999px;
+}
+
+::deep .attendance-page .status-button.approved {
+    color: var(--primary);
+    border-color: var(--border-strong);
+}
+
+::deep .attendance-page .status-button.approved span {
+    background: var(--primary);
+}
+
+::deep .attendance-page .pagination-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 0.65rem 0.3rem 0;
+    color: #1f2933;
+    font-size: 0.78rem;
+}
+
+::deep .attendance-page .pagination-row button {
+    color: #a7b0ac;
+    border: 0;
+    background: transparent;
+}
+
+@media (max-width: 760px) {
+    ::deep .attendance-page {
+        min-height: calc(100vh - 5.8rem);
+        padding: 0.75rem;
+    }
+
+    ::deep .attendance-page .attendance-card {
+        min-height: auto;
+        padding: 0.85rem;
+        border-radius: 0.85rem;
+    }
+
+    ::deep .attendance-page .page-heading {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    ::deep .attendance-page .page-heading h1 {
+        font-size: 1.25rem;
+    }
+
+    ::deep .attendance-page .toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+        align-items: stretch;
+        justify-content: stretch;
+    }
+
+    ::deep .attendance-page .segmented-control,
+    ::deep .attendance-page .filter-panel,
+    ::deep .attendance-page .view-button {
+        width: 100%;
+    }
+
+    ::deep .attendance-page .segmented-control {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    ::deep .attendance-page .segmented-control button {
+        flex: 1;
+    }
+
+    ::deep .attendance-page .filter-panel {
+        min-width: 0;
+    }
+
+    ::deep .attendance-page .filter-row {
+        grid-template-columns: 4.4rem minmax(0, 1fr);
+    }
+
+    ::deep .attendance-page .filter-input {
+        width: 100%;
+        min-height: 2.55rem;
+        padding: 0 0.45rem;
+    }
+
+    ::deep .attendance-page .view-button,
+    ::deep .attendance-page .segmented-control button {
+        min-height: 2.55rem;
+    }
+
+    ::deep .attendance-page .summary-grid {
+        min-width: 38rem;
+    }
+
+    ::deep .attendance-page .summary-card {
+        min-height: 4rem;
+    }
+
+    ::deep .attendance-page .search-row {
+        max-width: none;
+        margin-top: 0.7rem;
+    }
+
+    ::deep .attendance-page .attendance-list {
+        display: grid;
+        gap: 0.65rem;
+        overflow: visible;
+    }
+
+    ::deep .attendance-page .table-header {
+        display: none;
+    }
+
+    ::deep .attendance-page .attendance-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+        min-width: 0;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        box-shadow: 0 6px 16px rgba(43, 64, 150, 0.05);
+    }
+
+    ::deep .attendance-page .cell {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        min-height: 1.7rem;
+        color: var(--text);
+        font-weight: 700;
+    }
+
+    ::deep .attendance-page .detail-cell {
+        justify-content: space-between;
+    }
+
+    ::deep .attendance-page .date-cell,
+    ::deep .attendance-page .status-cell {
+        grid-column: auto;
+    }
+
+    ::deep .attendance-page .mobile-label {
+        display: inline;
+        color: var(--sub);
+        font-size: 0.68rem;
+        font-weight: 700;
+    }
+
+    ::deep .attendance-page .status-button {
+        width: fit-content;
+        margin-left: auto;
+    }
+
+    ::deep .attendance-page .detail-button {
+        margin-left: auto;
+    }
+
+    ::deep .attendance-page .pagination-row {
+        justify-content: center;
+        gap: 0.7rem;
+        flex-wrap: wrap;
+        font-size: 0.72rem;
+    }
+}
+
+@media (max-width: 480px) {
+    ::deep .attendance-page {
+        padding: 0.5rem;
+    }
+
+    ::deep .attendance-page .attendance-card {
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+    }
+
+    ::deep .attendance-page .page-heading h1 {
+        font-size: 1.1rem;
+    }
+
+    ::deep .attendance-page .page-heading p {
+        font-size: 0.76rem;
+    }
+
+    ::deep .attendance-page .summary-grid {
+        min-width: 34rem;
+        gap: 0.45rem;
+    }
+
+    ::deep .attendance-page .summary-card {
+        min-height: 3.85rem;
+        padding: 0.55rem;
+    }
+
+    ::deep .attendance-page .summary-card span {
+        font-size: 0.68rem;
+    }
+
+    ::deep .attendance-page .summary-card strong {
+        font-size: 1.2rem;
+    }
+
+    ::deep .attendance-page .filter-row {
+        grid-template-columns: 4rem minmax(0, 1fr);
+        gap: 0.35rem;
+    }
+
+    ::deep .attendance-page .filter-label {
+        font-size: 0.66rem;
+    }
+
+    ::deep .attendance-page .filter-input {
+        min-height: 2.35rem;
+        font-size: 0.75rem;
+    }
+
+    ::deep .attendance-page .search-row {
+        gap: 0.4rem;
+        margin-top: 0.55rem;
+        padding-inline: 0;
+    }
+
+    ::deep .attendance-page .attendance-row {
+        padding: 0.65rem;
+    }
+
+    ::deep .attendance-page .cell {
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    ::deep .attendance-page .status-button {
+        margin-left: 0;
+    }
+
+    ::deep .attendance-page .detail-button {
+        margin-left: 0;
+        min-height: 1.75rem;
+        padding: 0 0.55rem;
+        font-size: 0.66rem;
+    }
+
+    ::deep .attendance-page .detail-dialog-backdrop {
+        padding: 0.6rem;
+    }
+
+    ::deep .attendance-page .detail-dialog {
+        width: 100%;
+        max-height: 88vh;
+        padding: 0.85rem;
+        border-radius: 0.85rem;
+    }
+
+    ::deep .attendance-page .detail-dialog-header h2 {
+        font-size: 1rem;
+    }
+
+    ::deep .attendance-page .detail-item {
+        padding: 0.75rem;
+    }
+}
+
+
+/* Source: PayrollBreakdown.razor.css */
+::deep .payroll-page {
+    min-height: calc(100vh - 3.25rem);
+    padding: 0;
+    background: #f5f7fc;
+}
+
+::deep .payroll-page .payroll-shell {
+    min-height: calc(100vh - 5.25rem);
+    padding: 24px 1px 90px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+::deep .payroll-page .payroll-heading,
+::deep .payroll-page .panel-title.inline,
+::deep .payroll-page .section-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+::deep .payroll-page .payroll-heading {
+    margin-bottom: 1rem;
+}
+
+::deep .payroll-page .payroll-heading h1,
+::deep .payroll-page .section-heading h2,
+::deep .payroll-page .panel-title h2 {
+    margin: 0;
+    color: #1f2933;
+    font-weight: 800;
+}
+
+::deep .payroll-page .payroll-heading h1 {
+    font-size: 1.55rem;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+}
+
+::deep .payroll-page .payroll-heading p,
+::deep .payroll-page .section-heading p,
+::deep .payroll-page .panel-title p {
+    margin: 0.3rem 0 0;
+    color: #8a9490;
+    font-size: 0.82rem;
+}
+
+::deep .payroll-page .payroll-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+::deep .payroll-page .payroll-toolbar label {
+    display: grid;
+    gap: 0.2rem;
+    color: #8a9490;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+::deep .payroll-page .payroll-toolbar select,
+::deep .payroll-page .payroll-toolbar input {
+    min-width: 6.25rem;
+    height: 2.15rem;
+    padding: 0 0.6rem;
+    color: #1f2933;
+    background: #fff;
+    border: 1px solid #d9e3dc;
+    border-radius: 0.35rem;
+    outline: 0;
+}
+
+::deep .payroll-page .primary-action,
+::deep .payroll-page .outline-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.15rem;
+    padding: 0 0.9rem;
+    border-radius: 0.38rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+::deep .payroll-page .primary-action {
+    color: #fff;
+    background: linear-gradient(135deg, #708beb, #5668e7);
+    border: 1px solid #5668e7;
+    box-shadow: 0 10px 25px rgba(86, 104, 231, 0.25);
+}
+
+::deep .payroll-page .primary-action:disabled {
+    cursor: default;
+    opacity: 0.65;
+}
+
+::deep .payroll-page .outline-action {
+    color: #5668e7;
+    background: #fff;
+    border: 1px solid #d9e3dc;
+}
+
+::deep .payroll-page .payroll-alert,
+::deep .payroll-page .payroll-loading,
+::deep .payroll-page .empty-state {
+    margin-bottom: 1rem;
+    padding: 0.8rem 0.9rem;
+    border-radius: 0.65rem;
+    font-size: 0.86rem;
+}
+
+::deep .payroll-page .payroll-alert {
+    color: #9b1c1c;
+    background: #fff0f0;
+    border: 1px solid #ffd0d0;
+}
+
+::deep .payroll-page .payroll-loading,
+::deep .payroll-page .empty-state {
+    color: #8a9490;
+    background: #fbfdfb;
+    border: 1px dashed #d9e3dc;
+}
+
+::deep .payroll-page .metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+
+::deep .payroll-page .metric-card {
+    min-height: 5.75rem;
+    padding: 0.9rem;
+    background: #fff;
+    border: 1px solid #e5e9e5;
+    border-radius: 0.85rem;
+    box-shadow: 0 10px 30px rgba(20, 20, 40, 0.06);
+}
+
+::deep .payroll-page .metric-card.primary {
+    color: #fff;
+    background: linear-gradient(135deg, #708beb, #5668e7);
+    border-color: transparent;
+}
+
+::deep .payroll-page .metric-card span,
+::deep .payroll-page .metric-card small {
+    display: block;
+    color: #8a9490;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+::deep .payroll-page .metric-card.primary span,
+::deep .payroll-page .metric-card.primary small {
+    color: rgba(255, 255, 255, 0.78);
+}
+
+::deep .payroll-page .metric-card strong {
+    display: block;
+    margin-top: 0.45rem;
+    color: #2b2d33;
+    font-size: 1.45rem;
+    line-height: 1.1;
+    font-weight: 700;
+}
+
+::deep .payroll-page .metric-card.primary strong {
+    color: #fff;
+}
+
+::deep .payroll-page .metric-card small {
+    margin-top: 0.35rem;
+}
+
+::deep .payroll-page .analysis-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(20rem, 0.95fr);
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+
+::deep .payroll-page .panel-card {
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #e5e9e5;
+    border-radius: 0.9rem;
+    box-shadow: 0 10px 30px rgba(20, 20, 40, 0.06);
+}
+
+::deep .payroll-page .panel-title {
+    margin-bottom: 1rem;
+}
+
+::deep .payroll-page .mini-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-bottom: 1rem;
+}
+
+::deep .payroll-page .mini-stat-grid div {
+    padding: 0.85rem;
+    background: #fbfdfb;
+    border: 1px solid #e5e9e5;
+    border-radius: 0.65rem;
+}
+
+::deep .payroll-page .mini-stat-grid span,
+::deep .payroll-page .info-list span,
+::deep .payroll-page .breakdown-list span,
+::deep .payroll-page .progress-list span {
+    color: #8a9490;
+    font-size: 0.76rem;
+}
+
+::deep .payroll-page .mini-stat-grid strong,
+::deep .payroll-page .info-list strong {
+    display: block;
+    color: #2b2d33;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+::deep .payroll-page .mini-stat-grid small {
+    color: #8a9490;
+    font-size: 0.72rem;
+}
+
+::deep .payroll-page .donut-row,
+::deep .payroll-page .ratio-content {
+    display: flex;
+    align-items: center;
+    gap: 1.15rem;
+}
+
+::deep .payroll-page .donut {
+    display: grid;
+    place-items: center;
+    width: 7rem;
+    height: 7rem;
+    flex: 0 0 auto;
+    color: #5668e7;
+    border-radius: 999px;
+    position: relative;
+}
+
+::deep .payroll-page .donut::after {
+    position: absolute;
+    inset: 1.1rem;
+    content: "";
+    background: #fff;
+    border-radius: inherit;
+}
+
+::deep .payroll-page .donut strong,
+::deep .payroll-page .donut small {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+::deep .payroll-page .donut strong {
+    align-self: end;
+    font-size: 1.1rem;
+    font-weight: 900;
+}
+
+::deep .payroll-page .donut small {
+    align-self: start;
+    color: #8a9490;
+    font-size: 0.68rem;
+}
+
+::deep .payroll-page .donut.small {
+    width: 6rem;
+    height: 6rem;
+}
+
+::deep .payroll-page .legend-list {
+    display: grid;
+    gap: 0.45rem;
+}
+
+::deep .payroll-page .legend-list span {
+    color: #8a9490;
+    font-size: 0.78rem;
+}
+
+::deep .payroll-page .dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-right: 0.45rem;
+    border-radius: 999px;
+}
+
+::deep .payroll-page .dot.green {
+    background: #5668e7;
+}
+
+::deep .payroll-page .dot.light {
+    background: #d9e3dc;
+}
+
+::deep .payroll-page .progress-list {
+    display: grid;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+::deep .payroll-page .progress-list > div,
+::deep .payroll-page .breakdown-list > div {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr) 3.5rem;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+::deep .payroll-page .progress,
+::deep .payroll-page .bar {
+    height: 0.38rem;
+    overflow: hidden;
+    background: #edf1fa;
+    border-radius: 999px;
+}
+
+::deep .payroll-page .progress i,
+::deep .payroll-page .bar i {
+    display: block;
+    height: 100%;
+    background: #5668e7;
+    border-radius: inherit;
+}
+
+::deep .payroll-page .progress i.soft {
+    background: #708beb;
+}
+
+::deep .payroll-page .progress i.warn,
+::deep .payroll-page .breakdown-list strong.warning + * {
+    background: #ef5b16;
+}
+
+::deep .payroll-page .progress-list b,
+::deep .payroll-page .breakdown-list strong {
+    color: #2b2d33;
+    font-size: 0.76rem;
+    text-align: right;
+}
+
+::deep .payroll-page .breakdown-list {
+    display: grid;
+    gap: 0.68rem;
+}
+
+::deep .payroll-page .breakdown-list strong.warning {
+    color: #ef5b16;
+}
+
+::deep .payroll-page .section-heading {
+    margin: 0.75rem 0;
+}
+
+::deep .payroll-page .valid-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    color: #5668e7;
+    background: #eef2ff;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+::deep .payroll-page .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 0.65rem;
+}
+
+::deep .payroll-page .info-list {
+    display: grid;
+    gap: 0.7rem;
+}
+
+::deep .payroll-page .info-list div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid #edf1fa;
+}
+
+::deep .payroll-page .info-list strong {
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+::deep .payroll-page .special-card {
+    margin-top: 0.65rem;
+}
+
+::deep .payroll-page .simple-table {
+    overflow-x: auto;
+}
+
+::deep .payroll-page .table-head,
+::deep .payroll-page .table-row {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 44rem;
+    align-items: center;
+    padding: 0.65rem 0.75rem;
+}
+
+::deep .payroll-page .table-head {
+    color: #1f2933;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: #fbfdfb;
+    border-radius: 0.5rem;
+}
+
+::deep .payroll-page .table-row {
+    color: #2b2d33;
+    font-size: 0.8rem;
+    border-bottom: 1px solid #edf1fa;
+}
+
+::deep .payroll-page .table-head.special,
+::deep .payroll-page .table-row.special {
+    grid-template-columns: 1fr 1.2fr 0.8fr 1.2fr;
+}
+
+::deep .payroll-page .table-head.leave-history,
+::deep .payroll-page .table-row.leave-history {
+    grid-template-columns: 0.8fr repeat(4, 1fr);
+}
+
+::deep .payroll-page .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgba(14, 28, 21, 0.42);
+}
+
+::deep .payroll-page .payroll-modal {
+    width: min(58rem, 100%);
+    max-height: 85vh;
+    overflow: auto;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 0.9rem;
+    box-shadow: 0 24px 60px rgba(14, 28, 21, 0.25);
+}
+
+::deep .payroll-page .modal-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+::deep .payroll-page .modal-title h2,
+::deep .payroll-page .shift-detail-columns h3 {
+    margin: 0;
+    color: #1f2933;
+}
+
+::deep .payroll-page .modal-title button {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 900;
+}
+
+::deep .payroll-page .shift-detail-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+::deep .payroll-page .shift-detail-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.55rem;
+    padding: 0.65rem;
+    background: #fbfdfb;
+    border: 1px solid #e5e9e5;
+    border-radius: 0.55rem;
+}
+
+::deep .payroll-page .shift-detail-item strong {
+    color: #2b2d33;
+}
+
+@media (max-width: 1180px) {
+    ::deep .payroll-page .metric-grid,
+    ::deep .payroll-page .analysis-grid,
+    ::deep .payroll-page .detail-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    ::deep .payroll-page .breakdown-panel {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 760px) {
+    ::deep .payroll-page,
+    ::deep .payroll-page .payroll-shell {
+        padding: 0.375rem;
+    }
+
+    ::deep .payroll-page .payroll-heading,
+    ::deep .payroll-page .section-heading,
+    ::deep .payroll-page .panel-title.inline,
+    ::deep .payroll-page .donut-row,
+    ::deep .payroll-page .ratio-content {
+        flex-direction: column;
+    }
+
+    ::deep .payroll-page .payroll-toolbar,
+    ::deep .payroll-page .payroll-toolbar label,
+    ::deep .payroll-page .payroll-toolbar select,
+    ::deep .payroll-page .payroll-toolbar input,
+    ::deep .payroll-page .primary-action,
+    ::deep .payroll-page .outline-action {
+        width: 100%;
+    }
+
+    ::deep .payroll-page .metric-grid,
+    ::deep .payroll-page .analysis-grid,
+    ::deep .payroll-page .detail-grid,
+    ::deep .payroll-page .mini-stat-grid,
+    ::deep .payroll-page .shift-detail-columns {
+        grid-template-columns: 1fr;
+    }
+
+    ::deep .payroll-page .progress-list > div,
+    ::deep .payroll-page .breakdown-list > div {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+    }
+
+    ::deep .payroll-page .progress-list b,
+    ::deep .payroll-page .breakdown-list strong {
+        text-align: left;
+    }
+}
+
+
+/* Source: Login.razor.css */
+::deep .login-page .row {
+    margin-top: 0.75rem !important;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+::deep .login-page .card {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+::deep .login-page .card-body {
+    padding: 0.55rem;
+}
+
+::deep .login-page h1 {
+    color: #1f2933;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+}
+
+::deep .login-page .form-label,
+::deep .login-page .form-check-label {
+    color: #8a9490;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+::deep .login-page .form-control {
+    color: #1f2933;
+    border: 1px solid #d9e3dc;
+}
+
+::deep .login-page .btn-primary {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #708beb, #5668e7);
+    border-color: #5668e7;
+    box-shadow: 0 10px 25px rgba(86, 104, 231, 0.25);
+}
+
+::deep .login-page .form-control,
+::deep .login-page .btn,
+::deep .login-page .form-check-input {
+    min-height: 2.75rem;
+}
+
+::deep .login-page .form-check-input {
+    min-height: 1.1rem;
+}
+
+@media (max-width: 760px) {
+    ::deep .login-page .row {
+        margin-top: 0.375rem !important;
+    }
+
+    ::deep .login-page .card-body {
+        padding: 0.475rem;
+    }
+
+    ::deep .login-page h1 {
+        font-size: 1.2rem;
+    }
+
+    ::deep .login-page .form-label,
+    ::deep .login-page .form-check-label,
+    ::deep .login-page .btn,
+    ::deep .login-page .alert,
+    ::deep .login-page .border {
+        font-size: 0.92rem;
+    }
+
+    ::deep .login-page .form-label,
+    ::deep .login-page .form-check-label {
+        font-size: 0.72rem;
+    }
+}
+
+@media (max-width: 480px) {
+    ::deep .login-page .row {
+        margin-top: 0.25rem !important;
+    }
+
+    ::deep .login-page .card-body {
+        padding: 0.425rem;
+    }
+
+    ::deep .login-page h1 {
+        margin-bottom: 1rem !important;
+    }
+
+    ::deep .login-page .form-control,
+    ::deep .login-page .btn {
+        min-height: 2.6rem;
+        font-size: 0.95rem;
+    }
+
+    ::deep .login-page .border {
+        max-height: 220px !important;
+        font-size: 0.75rem !important;
+    }
+}
+
+
+/* Source: ShiftRegistration.razor.css */
+::deep .shift-registration-page {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: var(--bg-page);
+}
+
+::deep .shift-registration-page .content {
+    padding: 22px 0px 90px;
+    background: var(--bg-page);
+}
+
+::deep .shift-registration-page .page-title {
+    margin: 0 0 6px;
+    color: var(--text-main);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+::deep .shift-registration-page .page-sub {
+    margin: 0 0 18px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+::deep .shift-registration-page .btn-primary {
+    width: 100%;
+    margin-bottom: 22px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    font-family: var(--app-font);
+    cursor: pointer;
+}
+
+::deep .shift-registration-page .btn-primary svg {
+    width: 16px;
+    height: 16px;
+}
+
+::deep .shift-registration-page .btn-primary:disabled {
+    cursor: default;
+    opacity: 0.7;
+}
+
+::deep .shift-registration-page .page-error,
+::deep .shift-registration-page .calendar-loading {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+::deep .shift-registration-page .page-error {
+    color: var(--danger);
+    background: var(--danger-soft-bg);
+}
+
+::deep .shift-registration-page .calendar-loading {
+    color: var(--text-muted);
+    text-align: center;
+    background: var(--bg-page);
+}
+
+::deep .shift-registration-page .calendar-card {
+    margin-bottom: 16px;
+    padding: 20px 18px 12px;
+}
+
+::deep .shift-registration-page .cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+::deep .shift-registration-page .cal-title {
+    color: var(--text-main);
+    font-size: 19px;
+    font-weight: 800;
+}
+
+::deep .shift-registration-page .nav-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+::deep .shift-registration-page .nav-btn {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+    cursor: pointer;
+}
+
+::deep .shift-registration-page .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+::deep .shift-registration-page .weekdays span {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+::deep .shift-registration-page .weekdays span.sun {
+    color: var(--accent);
+    font-weight: 800;
+}
+
+::deep .shift-registration-page .days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    row-gap: 2px;
+}
+
+::deep .shift-registration-page .day-row-divider {
+    grid-column: 1 / -1;
+    margin: 4px 0;
+    border-bottom: 1px solid var(--divider);
+}
+
+::deep .shift-registration-page .day {
+    position: relative;
+    padding: 6px 0 10px;
+    text-align: center;
+}
+
+::deep .shift-registration-page .day .solar {
+    color: var(--text-main);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+::deep .shift-registration-page .day .shift {
+    color: var(--text-shift);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+::deep .shift-registration-page .day.empty .solar,
+::deep .shift-registration-page .day.empty .shift {
+    visibility: hidden;
+}
+
+::deep .shift-registration-page .day.sunday .solar {
+    color: var(--accent);
+    font-weight: 800;
+}
+
+::deep .shift-registration-page .day.sunday .shift {
+    color: var(--accent);
+    opacity: 0.85;
+    font-weight: 700;
+}
+
+::deep .shift-registration-page .day .dot {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 14px);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+::deep .shift-registration-page .day.selected .solar-wrap {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+    box-shadow: 0 6px 14px rgba(67,56,202,0.4);
+}
+
+::deep .shift-registration-page .day.selected .solar {
+    color: #fff;
+    font-weight: 800;
+}
+
+::deep .shift-registration-page .day.selected .shift {
+    color: rgba(255,255,255,.9);
+    font-weight: 600;
+}
+
+::deep .shift-registration-page .info-card,
+::deep .shift-registration-page .overview-card {
+    margin-bottom: 14px;
+    background: var(--bg-card);
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(20,20,40,0.06);
+}
+
+::deep .shift-registration-page .info-card {
+    overflow: hidden;
+}
+
+::deep .shift-registration-page .info-header {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+}
+
+::deep .shift-registration-page .info-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+::deep .shift-registration-page .info-icon svg {
+    width: 20px;
+    height: 20px;
+    color: #fff;
+}
+
+::deep .shift-registration-page .info-text {
+    flex: 1;
+}
+
+::deep .shift-registration-page .info-title {
+    margin-bottom: 2px;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+::deep .shift-registration-page .info-sub {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+::deep .shift-registration-page .chevron {
+    color: var(--text-muted);
+    font-size: 16px;
+    transition: transform .2s ease;
+}
+
+::deep .shift-registration-page .info-card.open .chevron {
+    transform: rotate(180deg);
+}
+
+::deep .shift-registration-page .info-body {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 16px;
+    transition: max-height .25s ease;
+}
+
+::deep .shift-registration-page .info-card.open .info-body {
+    max-height: 500px;
+    padding: 0 16px 16px;
+}
+
+::deep .shift-registration-page .shift-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-top: 1px solid var(--divider);
+    gap: 12px;
+}
+
+::deep .shift-registration-page .shift-code {
+    display: inline-block;
+    min-width: 52px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    text-align: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+}
+
+::deep .shift-registration-page .shift-time {
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+}
+
+::deep .shift-registration-page .overview-card {
+    padding: 18px 16px;
+}
+
+::deep .shift-registration-page .overview-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+::deep .shift-registration-page .donut-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+    position: relative;
+}
+
+::deep .shift-registration-page .donut {
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+::deep .shift-registration-page .donut-inner {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+    ::deep .shift-registration-page .donut-ratio {
+        margin-bottom: 16px;
+        color: #010d24;
+        text-align: center;
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+::deep .shift-registration-page .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+::deep .shift-registration-page .legend-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 600;
+    gap: 12px;
+}
+
+::deep .shift-registration-page .legend-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+::deep .shift-registration-page .dot-legend {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+::deep .shift-registration-page .dot-legend.filled {
+    background: var(--grad-from);
+}
+
+::deep .shift-registration-page .dot-legend.empty {
+    background: #dcdaf9;
+}
+
+@media (max-width: 480px) {
+    ::deep .shift-registration-page .content {
+        padding: 20px 16px 90px;
+    }
+}
+
+
+/* Source: EmployeeRequests.razor.css */
+::deep .employee-request-page {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-page);
+}
+
+::deep .employee-request-page .content {
+    padding: 24px 20px 90px;
+}
+
+::deep .employee-request-page .page-title {
+    margin: 0 0 6px;
+    color: var(--text-main);
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+::deep .employee-request-page .page-sub {
+    margin: 0 0 22px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+::deep .employee-request-page .page-head {
+    display: grid;
+    grid-template-columns :1fr 1fr;
+}
+
+::deep .employee-request-page .page-head-text {
+    min-width: 0;
+}
+
+::deep .employee-request-page .page-head-text .page-sub {
+    margin-bottom: 0;
+}
+
+::deep .employee-request-page .page-head-action {
+    display: inline-flex;
+    width: fit-content;
+    padding: 8px 14px;
+}
+
+::deep .employee-request-page .filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+::deep .employee-request-page .field label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+::deep .employee-request-page .field select,
+::deep .employee-request-page .field input {
+    width: 100%;
+    border: 1px solid var(--divider);
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--app-font);
+    appearance: none;
+}
+
+::deep .employee-request-page .btn-primary {
+    width: 100%;
+    margin-bottom: 22px;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    font-family: var(--app-font);
+}
+
+::deep .employee-request-page .request-alert,
+::deep .employee-request-page .request-empty {
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+::deep .employee-request-page .request-alert {
+    color: var(--danger);
+    background: var(--danger-soft-bg);
+}
+
+::deep .employee-request-page .request-alert.slim {
+    margin-bottom: 0;
+}
+
+::deep .employee-request-page .request-empty {
+    color: var(--text-muted);
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(20,20,40,0.06);
+}
+
+::deep .employee-request-page .request-card {
+    padding: 20px 18px;
+    margin-bottom: 16px;
+}
+
+::deep .employee-request-page .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--divider);
+}
+
+::deep .employee-request-page .row:first-child {
+    padding-top: 0;
+}
+
+::deep .employee-request-page .row:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+::deep .employee-request-page .label {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+::deep .employee-request-page .value {
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 700;
+    text-align: right;
+}
+
+::deep .employee-request-page .pill {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+::deep .employee-request-page .pill-neutral {
+    background: var(--divider);
+    color: #6b7078;
+}
+
+::deep .employee-request-page .pill-status {
+    background: var(--accent-soft-bg);
+    color: var(--accent);
+}
+
+::deep .employee-request-page .pill-status.approved {
+    background: rgba(67, 56, 202, 0.12);
+    color: var(--accent);
+}
+
+::deep .employee-request-page .pill-status.rejected,
+::deep .employee-request-page .pill-status.cancelled {
+    background: var(--danger-soft-bg);
+    color: var(--danger);
+}
+
+::deep .employee-request-page .link-button {
+    border: 0;
+    padding: 0;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 800;
+    background: transparent;
+    cursor: pointer;
+}
+
+::deep .employee-request-page .btn-cancel {
+    border: 1.5px solid var(--danger);
+    color: var(--danger);
+    background: #fff;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    padding: 6px 16px;
+    border-radius: 10px;
+    font-family: var(--app-font);
+}
+
+::deep .employee-request-page .btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+::deep .employee-request-page .request-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(20, 20, 40, 0.28);
+}
+
+::deep .employee-request-page .request-modal {
+    width: min(54rem, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    box-shadow: 0 18px 40px rgba(20,20,40,0.14);
+}
+
+::deep .employee-request-page .request-modal.large {
+    width: min(64rem, 100%);
+}
+
+::deep .employee-request-page .request-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+::deep .employee-request-page .request-modal-header h2,
+::deep .employee-request-page .section-subtitle {
+    margin: 0;
+    color: var(--text-main);
+}
+
+::deep .employee-request-page .request-modal-header h2 {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+::deep .employee-request-page .request-modal-header p {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+::deep .employee-request-page .close-button {
+    border: 0;
+    width: 32px;
+    height: 32px;
+    color: var(--text-muted);
+    font-weight: 800;
+    background: transparent;
+    cursor: pointer;
+}
+
+::deep .employee-request-page .request-detail-grid,
+::deep .employee-request-page .create-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+::deep .employee-request-page .request-detail-grid.compact {
+    margin-top: 12px;
+}
+
+::deep .employee-request-page .request-detail-grid > div,
+::deep .employee-request-page .reason-box,
+::deep .employee-request-page .daily-detail-box,
+::deep .employee-request-page .form-field {
+    padding: 14px;
+    background: #fff;
+    border: 1px solid var(--divider);
+    border-radius: 16px;
+}
+
+::deep .employee-request-page .request-detail-grid span,
+::deep .employee-request-page .reason-box span,
+::deep .employee-request-page .section-subtitle,
+::deep .employee-request-page .form-field span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+::deep .employee-request-page .request-detail-grid strong,
+::deep .employee-request-page .reason-box p {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+::deep .employee-request-page .reason-box,
+::deep .employee-request-page .daily-detail-box,
+::deep .employee-request-page .form-field.full-width {
+    grid-column: 1 / -1;
+}
+
+::deep .employee-request-page .reason-box p {
+    margin-bottom: 0;
+    white-space: pre-wrap;
+}
+
+::deep .employee-request-page .compact-table {
+    border: 1px solid var(--divider);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+::deep .employee-request-page .request-table {
+    overflow-x: auto;
+}
+
+::deep .employee-request-page .request-table-head,
+::deep .employee-request-page .request-table-row {
+    display: grid;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+}
+
+::deep .employee-request-page .request-table-head {
+    color: var(--text-main);
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--bg-page);
+}
+
+::deep .employee-request-page .request-table-row {
+    color: var(--text-main);
+    font-size: 13px;
+    border-top: 1px solid var(--divider);
+}
+
+::deep .employee-request-page .compact-group-header,
+::deep .employee-request-page .compact-group-row {
+    grid-template-columns: 1fr 1.2fr 0.8fr 0.9fr 1.8fr;
+    min-width: 0;
+}
+
+::deep .employee-request-page .form-field {
+    display: grid;
+    gap: 8px;
+}
+
+::deep .employee-request-page .form-field select,
+::deep .employee-request-page .form-field input,
+::deep .employee-request-page .form-field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--app-font);
+    background: #fff;
+    border: 1px solid var(--divider);
+    border-radius: 12px;
+    outline: 0;
+}
+
+::deep .employee-request-page .form-field textarea {
+    resize: vertical;
+}
+
+::deep .employee-request-page .date-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+::deep .employee-request-page .date-chip {
+    border: 0;
+    min-width: 5rem;
+    padding: 10px 12px;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--divider);
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+::deep .employee-request-page .date-chip strong,
+::deep .employee-request-page .date-chip small {
+    display: block;
+}
+
+::deep .employee-request-page .date-chip strong {
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+::deep .employee-request-page .date-chip small {
+    margin-top: 3px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+::deep .employee-request-page .date-chip.selected {
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+}
+
+::deep .employee-request-page .date-chip.selected strong,
+::deep .employee-request-page .date-chip.selected small {
+    color: #fff;
+}
+
+::deep .employee-request-page .create-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+::deep .employee-request-page .outline-button,
+::deep .employee-request-page .primary-button {
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-family: var(--app-font);
+    cursor: pointer;
+}
+
+::deep .employee-request-page .outline-button {
+    color: var(--accent);
+    background: #fff;
+    border: 1px solid var(--divider);
+}
+
+::deep .employee-request-page .primary-button {
+    border: 0;
+    color: #fff;
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+    box-shadow: 0 10px 20px rgba(67,56,202,0.3);
+}
+
+::deep .employee-request-page .outline-button:disabled,
+::deep .employee-request-page .primary-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+@media (max-width: 640px) {
+    ::deep .employee-request-page .content {
+        padding: 24px 16px 90px;
+    }
+
+    ::deep .employee-request-page .request-detail-grid,
+    ::deep .employee-request-page .create-form-grid,
+    ::deep .employee-request-page .compact-group-header,
+    ::deep .employee-request-page .compact-group-row {
+        grid-template-columns: 1fr;
+    }
+
+    ::deep .employee-request-page .request-modal {
+        padding: 16px;
+    }
+
+    ::deep .employee-request-page .create-form-actions {
+        flex-direction: column;
+    }
+
+    ::deep .employee-request-page .outline-button,
+    ::deep .employee-request-page .primary-button {
+        width: 100%;
+    }
+}
+
+}
+/* END CONSOLIDATED PAGE STYLES */
+

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1010931683930",
+    "project_id": "push--noti",
+    "storage_bucket": "push--noti.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1010931683930:android:5ad5e7b6e73f377ebfbe63",
+        "android_client_info": {
+          "package_name": "com.company.erpemployee"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqknSt6XH3KavyE0Z2RJ_WJ1q_fKokwBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

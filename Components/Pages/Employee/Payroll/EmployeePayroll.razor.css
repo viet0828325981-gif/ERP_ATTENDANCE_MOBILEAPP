@@ -1,0 +1,466 @@
+/* Khung tổng thể màn phân tích lương */
+.payroll-page {
+    width: 100%;
+    min-height: 100vh;
+    background: var(--bg-page);
+}
+
+/* Vùng nội dung chính, chừa khoảng cho bottom nav */
+.payroll-shell {
+    padding: clamp(16px, 4vw, 24px) 0 90px;
+}
+
+/* Tiêu đề và mô tả đầu màn */
+.page-title {
+    font-size: clamp(20px, 5vw, 24px);
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: .3px;
+    margin: 0 0 4px;
+}
+
+.payroll-subtitle {
+    font-size: clamp(12px, 2.8vw, 13px);
+    color: var(--text-muted);
+    margin: 0 0 clamp(14px, 3.5vw, 18px);
+    font-weight: 500;
+}
+
+.section-title {
+    font-size: clamp(14px, 3.5vw, 15px);
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0 0 2px;
+}
+
+.section-sub {
+    font-size: clamp(10.5px, 2.6vw, 11.5px);
+    color: var(--text-muted);
+    margin: 0 0 clamp(10px, 2.8vw, 12px);
+    font-weight: 500;
+}
+
+/* Bộ lọc tháng/năm */
+.payroll-filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(8px, 2vw, 10px);
+    margin-bottom: clamp(8px, 2.5vw, 10px);
+}
+
+.payroll-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.payroll-field-action {
+    justify-content: flex-end;
+}
+
+.payroll-field label {
+    display: block;
+    font-size: clamp(10px, 2.4vw, 11px);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 6px;
+}
+
+.payroll-field select,
+.payroll-field input {
+    width: 100%;
+    border: 1px solid var(--divider);
+    background: var(--bg-card);
+    border-radius: var(--radius-input);
+    min-height: clamp(36px, 8vw, 40px);
+    padding: clamp(8px, 2.5vw, 10px);
+    font-size: clamp(12px, 2.8vw, 13px);
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--app-font);
+    appearance: none;
+}
+
+.payroll-primary-button {
+    width: 100%;
+    border: none;
+    border-radius: var(--radius-btn);
+    min-height: clamp(38px, 8.5vw, 44px);
+    padding: clamp(10px, 3vw, 13px);
+    font-size: clamp(12px, 2.9vw, 13.5px);
+    font-weight: 800;
+    letter-spacing: .5px;
+    margin-bottom: 0;
+    font-family: var(--app-font);
+    cursor: pointer;
+}
+
+/* Hai chip lương chính */
+.salary-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(8px, 2.4vw, 10px);
+    margin-bottom: clamp(12px, 3vw, 16px);
+}
+
+.salary-chip {
+    border-radius: 16px;
+    padding: clamp(12px, 3vw, 14px);
+}
+
+.salary-chip.primary {
+    background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
+    box-shadow: 0 10px 20px rgba(67,56,202,0.25);
+}
+
+.salary-chip.secondary {
+    background: var(--bg-card);
+    box-shadow: 0 8px 22px rgba(20,20,40,0.05);
+}
+
+.salary-label {
+    font-size: clamp(9.5px, 2.4vw, 10.5px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    margin-bottom: 6px;
+}
+
+.salary-chip.primary .salary-label {
+    color: rgba(255,255,255,0.85);
+}
+
+.salary-chip.secondary .salary-label {
+    color: var(--text-muted);
+}
+
+.salary-value {
+    font-size: clamp(15px, 4.4vw, 18px);
+    font-weight: 800;
+}
+
+.salary-chip.primary .salary-value {
+    color: #fff;
+}
+
+.salary-chip.secondary .salary-value {
+    color: var(--text-main);
+}
+
+/* Card trắng dùng chung */
+.payroll-card {
+    background: var(--bg-card);
+    border-radius: 18px;
+    padding: clamp(12px, 3.5vw, 16px);
+    box-shadow: 0 8px 22px rgba(20,20,40,0.05);
+    margin-bottom: clamp(12px, 3vw, 14px);
+}
+
+/* Grid chỉ số công */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(5px, 1.8vw, 8px);
+}
+
+.stat-cell {
+    background: #f7f7fb;
+    border-radius: 12px;
+    padding: clamp(7px, 2.2vw, 9px) clamp(3px, 1.2vw, 4px);
+    text-align: center;
+}
+
+.stat-cell .num {
+    font-size: clamp(12px, 3.4vw, 14px);
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.stat-cell .num.accent {
+    color: var(--accent);
+}
+
+.stat-cell .num.warn {
+    color: #ea580c;
+}
+
+.stat-cell .lbl {
+    font-size: clamp(8px, 2.2vw, 9.5px);
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 3px;
+    line-height: 1.2;
+}
+
+/* Donut đôi trong cùng một card */
+.donut-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(8px, 2.4vw, 10px);
+}
+
+.donut-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.donut-sm {
+    width: clamp(68px, 22vw, 84px);
+    height: clamp(68px, 22vw, 84px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.donut-inner-sm {
+    width: clamp(46px, 14vw, 56px);
+    height: clamp(46px, 14vw, 56px);
+    border-radius: 50%;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.donut-inner-sm .pct {
+    font-size: clamp(11px, 3vw, 13px);
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+}
+
+.donut-inner-sm .frac {
+    font-size: clamp(7.5px, 2vw, 8.5px);
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.donut-caption {
+    font-size: clamp(10px, 2.6vw, 11px);
+    font-weight: 700;
+    color: var(--text-main);
+    text-align: center;
+}
+
+.donut-caption .sub {
+    display: block;
+    font-size: 9.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 1px;
+}
+
+/* Nhãn dữ liệu thực */
+.badge-live {
+    display: inline-block;
+    font-size: clamp(9.5px, 2.4vw, 10.5px);
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft-bg);
+    padding: 4px clamp(8px, 2.5vw, 10px);
+    border-radius: 999px;
+    margin-bottom: 12px;
+}
+
+/* Hai card nhỏ công phép / đăng ký ca */
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(8px, 2.4vw, 10px);
+}
+
+.row-card-title {
+    font-size: clamp(12px, 3vw, 13px);
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 2px;
+}
+
+.row-card-sub {
+    font-size: clamp(9.5px, 2.4vw, 10.5px);
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.row-card-btn {
+    width: 100%;
+    border: 1px solid var(--accent-soft-bg);
+    background: var(--accent-soft-bg);
+    color: var(--accent);
+    font-weight: 800;
+    font-size: clamp(10.5px, 2.6vw, 11.5px);
+    letter-spacing: .3px;
+    padding: clamp(8px, 2.5vw, 9px);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-family: var(--app-font);
+    cursor: pointer;
+}
+
+.mini-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(5px, 1.8vw, 6px) 0;
+    border-top: 1px solid var(--divider);
+    gap: clamp(8px, 2.4vw, 10px);
+}
+
+.mini-row:first-of-type {
+    border-top: none;
+}
+
+.mini-row .payroll-mini-label {
+    font-size: clamp(10px, 2.5vw, 11px);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.mini-row .payroll-mini-value {
+    font-size: clamp(11.5px, 2.8vw, 12.5px);
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.empty-box {
+    border: 1.5px dashed var(--divider);
+    border-radius: 12px;
+    padding: clamp(12px, 3.5vw, 16px);
+    text-align: center;
+    font-size: clamp(11px, 2.6vw, 12px);
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Bảng chi tiết công đặc biệt khi có dữ liệu */
+.simple-table {
+    overflow-x: auto;
+}
+
+.table-head,
+.table-row {
+    display: grid;
+    gap: clamp(8px, 2.4vw, 10px);
+    min-width: 34rem;
+    align-items: center;
+    padding: clamp(8px, 2.5vw, 10px) clamp(10px, 3vw, 12px);
+}
+
+.table-head {
+    color: var(--text-main);
+    font-size: clamp(10px, 2.4vw, 11px);
+    font-weight: 800;
+    background: #f7f7fb;
+    border-radius: 10px;
+}
+
+.table-row {
+    color: var(--text-main);
+    font-size: clamp(11px, 2.6vw, 12px);
+    border-bottom: 1px solid var(--divider);
+}
+
+.table-head.special,
+.table-row.special {
+    grid-template-columns: 1fr 1.2fr .8fr 1.2fr;
+}
+
+.table-head.leave-history,
+.table-row.leave-history {
+    grid-template-columns: .8fr repeat(4, 1fr);
+}
+
+/* Modal lịch sử / chi tiết ca */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: clamp(12px, 4vw, 16px);
+    background: rgba(28, 29, 33, 0.28);
+}
+
+.payroll-modal {
+    width: min(58rem, 100%);
+    max-height: 85vh;
+    overflow: auto;
+    padding: clamp(12px, 4vw, 16px);
+    background: var(--bg-card);
+    border-radius: 18px;
+    box-shadow: 0 18px 40px rgba(28, 29, 33, 0.14);
+}
+
+.modal-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(10px, 3vw, 16px);
+    margin-bottom: clamp(12px, 3.5vw, 16px);
+}
+
+.modal-title h2,
+.shift-detail-columns h3 {
+    margin: 0;
+    color: var(--text-main);
+}
+
+.modal-title button {
+    border: 0;
+    color: var(--text-muted);
+    background: transparent;
+    cursor: pointer;
+    font-weight: 900;
+}
+
+.shift-detail-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(10px, 3vw, 12px);
+}
+
+.shift-detail-item {
+    display: flex;
+    justify-content: space-between;
+    gap: clamp(8px, 2.5vw, 12px);
+    margin-top: clamp(6px, 2vw, 8px);
+    padding: clamp(8px, 2.5vw, 10px);
+    background: #f7f7fb;
+    border: 1px solid var(--divider);
+    border-radius: 10px;
+}
+
+@media (max-width: 640px) {
+    .two-col,
+    .salary-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .stat-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 420px) {
+    .payroll-filters {
+        gap: 6px;
+    }
+
+    .payroll-field label {
+        font-size: 9px;
+    }
+
+    .payroll-field select,
+    .payroll-field input {
+        padding-inline: 6px;
+        font-size: 11px;
+    }
+}

@@ -1,0 +1,11 @@
+@namespace ERP_PAYROLLMOBILE.Components.Shared
+
+<div class="bottom-nav">
+    @foreach (var tab in Tabs)
+    {
+        <div class="nav-item @(tab == ActiveTab ? "active" : "")"
+             @onclick="() => HandleTabClick(tab)">
+            @tab
+        </div>
+    }
+</div>

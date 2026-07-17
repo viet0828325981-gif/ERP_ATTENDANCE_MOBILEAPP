@@ -1,0 +1,18 @@
+.topbar{
+    width:100%;
+    padding:16px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+.brand{ font-size:14px; font-weight:800; letter-spacing:.5px; }
+.right{ display:flex; align-items:center; gap:10px; }
+.bell-wrap{ position:relative; display:flex; align-items:center; }
+.bell{ width:20px; height:20px; }
+.badge{
+    position:absolute; top:-6px; right:-8px;
+    background:#ff4d4f; color:#fff; font-size:10px; font-weight:800;
+    width:16px; height:16px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+}
+.logout{ font-size:13px; font-weight:700; cursor:pointer; }
