@@ -6,12 +6,6 @@ namespace ERP_PAYROLLMOBILE.Api;
 
 public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvider
 {
-    private const string UserIdKey = "moon_identity_user_id";
-    private const string EmployeeIdKey = "moon_identity_employee_id";
-    private const string CompanyIdKey = "moon_identity_company_id";
-    private const string RoleKey = "moon_identity_role";
-    private const string JwtKey = "moon_identity_access_token";
-    private const string ExpiresUtcKey = "moon_identity_expires_utc";
     private static readonly ClaimsPrincipal Anonymous = new(new ClaimsIdentity());
     private readonly SemaphoreSlim syncRoot = new(1, 1);
     private AuthenticationState? cachedState;
@@ -44,12 +38,12 @@ public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvide
     {
         var expiresUtc = DateTimeOffset.UtcNow.Add(rememberMe ? TimeSpan.FromDays(7) : TimeSpan.FromHours(8));
 
-        await SecureStorage.Default.SetAsync(UserIdKey, userId);
-        await SecureStorage.Default.SetAsync(EmployeeIdKey, employeeId);
-        await SecureStorage.Default.SetAsync(CompanyIdKey, companyId.ToString());
-        await SecureStorage.Default.SetAsync(RoleKey, role ?? string.Empty);
-        await SecureStorage.Default.SetAsync(JwtKey, jwt);
-        await SecureStorage.Default.SetAsync(ExpiresUtcKey, expiresUtc.ToString("O", CultureInfo.InvariantCulture));
+        await SecureStorage.Default.SetAsync(IdentityStorageKeys.UserIdKey, userId);
+        await SecureStorage.Default.SetAsync(IdentityStorageKeys.EmployeeIdKey, employeeId);
+        await SecureStorage.Default.SetAsync(IdentityStorageKeys.CompanyIdKey, companyId.ToString());
+        await SecureStorage.Default.SetAsync(IdentityStorageKeys.RoleKey, role ?? string.Empty);
+        await SecureStorage.Default.SetAsync(IdentityStorageKeys.JwtKey, jwt);
+        await SecureStorage.Default.SetAsync(IdentityStorageKeys.ExpiresUtcKey, expiresUtc.ToString("O", CultureInfo.InvariantCulture));
 
         var state = new AuthenticationState(CreatePrincipal(userId, employeeId, companyId, jwt, role));
         cachedState = state;
@@ -58,12 +52,12 @@ public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvide
 
     public void SignOut()
     {
-        SecureStorage.Default.Remove(UserIdKey);
-        SecureStorage.Default.Remove(EmployeeIdKey);
-        SecureStorage.Default.Remove(CompanyIdKey);
-        SecureStorage.Default.Remove(RoleKey);
-        SecureStorage.Default.Remove(JwtKey);
-        SecureStorage.Default.Remove(ExpiresUtcKey);
+        SecureStorage.Default.Remove(IdentityStorageKeys.UserIdKey);
+        SecureStorage.Default.Remove(IdentityStorageKeys.EmployeeIdKey);
+        SecureStorage.Default.Remove(IdentityStorageKeys.CompanyIdKey);
+        SecureStorage.Default.Remove(IdentityStorageKeys.RoleKey);
+        SecureStorage.Default.Remove(IdentityStorageKeys.JwtKey);
+        SecureStorage.Default.Remove(IdentityStorageKeys.ExpiresUtcKey);
 
         var state = new AuthenticationState(Anonymous);
         cachedState = state;
@@ -72,12 +66,12 @@ public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvide
 
     private static async Task<ClaimsPrincipal> GetCurrentPrincipalAsync()
     {
-        var userId = await SecureStorage.Default.GetAsync(UserIdKey);
-        var employeeId = await SecureStorage.Default.GetAsync(EmployeeIdKey);
-        var companyIdText = await SecureStorage.Default.GetAsync(CompanyIdKey);
-        var role = await SecureStorage.Default.GetAsync(RoleKey);
-        var jwt = await SecureStorage.Default.GetAsync(JwtKey);
-        var expiresUtcText = await SecureStorage.Default.GetAsync(ExpiresUtcKey);
+        var userId = await SecureStorage.Default.GetAsync(IdentityStorageKeys.UserIdKey);
+        var employeeId = await SecureStorage.Default.GetAsync(IdentityStorageKeys.EmployeeIdKey);
+        var companyIdText = await SecureStorage.Default.GetAsync(IdentityStorageKeys.CompanyIdKey);
+        var role = await SecureStorage.Default.GetAsync(IdentityStorageKeys.RoleKey);
+        var jwt = await SecureStorage.Default.GetAsync(IdentityStorageKeys.JwtKey);
+        var expiresUtcText = await SecureStorage.Default.GetAsync(IdentityStorageKeys.ExpiresUtcKey);
 
         if (string.IsNullOrWhiteSpace(userId)
             || string.IsNullOrWhiteSpace(employeeId)
@@ -85,12 +79,12 @@ public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvide
             || !Guid.TryParse(companyIdText, out var companyId)
             || IsExpired(expiresUtcText))
         {
-            SecureStorage.Default.Remove(UserIdKey);
-            SecureStorage.Default.Remove(EmployeeIdKey);
-            SecureStorage.Default.Remove(CompanyIdKey);
-            SecureStorage.Default.Remove(RoleKey);
-            SecureStorage.Default.Remove(JwtKey);
-            SecureStorage.Default.Remove(ExpiresUtcKey);
+            SecureStorage.Default.Remove(IdentityStorageKeys.UserIdKey);
+            SecureStorage.Default.Remove(IdentityStorageKeys.EmployeeIdKey);
+            SecureStorage.Default.Remove(IdentityStorageKeys.CompanyIdKey);
+            SecureStorage.Default.Remove(IdentityStorageKeys.RoleKey);
+            SecureStorage.Default.Remove(IdentityStorageKeys.JwtKey);
+            SecureStorage.Default.Remove(IdentityStorageKeys.ExpiresUtcKey);
             return Anonymous;
         }
 
