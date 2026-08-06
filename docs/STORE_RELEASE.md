@@ -19,6 +19,7 @@ Repository/environment secrets:
 | `ANDROID_KEY_ALIAS` | Alias của upload key |
 | `ANDROID_KEY_PASSWORD` | Mật khẩu private key Android |
 | `ANDROID_KEYSTORE_PASSWORD` | Mật khẩu keystore Android |
+| `FIREBASE_GOOGLE_SERVICES_JSON` | Toàn bộ file `google-services.json` của Firebase Android app `vn.moon.tinhcong` |
 | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | Toàn bộ JSON key của service account có quyền trên app Moon Tính Công |
 | `APPSTORE_CERTIFICATES_FILE_BASE64` | Apple Distribution `.p12` được mã hóa base64 một dòng |
 | `APPSTORE_CERTIFICATES_PASSWORD` | Mật khẩu export file `.p12` |
@@ -38,6 +39,8 @@ Environment variables:
 3. Bật Google Play Developer API cho Google Cloud project chứa service account.
 4. Giữ Android upload keystore và mật khẩu ở nơi backup ngoài GitHub. Không tạo upload key mới cho các bản cập nhật sau.
 5. Lần đầu nên phát hành lên Internal Testing. Play Console còn yêu cầu hoàn tất các mục thiết lập app trước khi mở production.
+
+File `Platforms/Android/google-services.json` trong lịch sử repo thuộc package ID cũ. Workflow luôn ghi đè file này từ secret `FIREBASE_GOOGLE_SERVICES_JSON` và dừng ngay nếu secret chưa được cấu hình, tránh phát hành bản có Firebase push sai app.
 
 ## Chuẩn bị App Store Connect
 

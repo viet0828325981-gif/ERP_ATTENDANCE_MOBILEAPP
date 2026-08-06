@@ -78,6 +78,15 @@ jobs:
       - name: Install .NET MAUI Android workload
         run: dotnet workload install maui-android --version "${DOTNET_WORKLOAD_SET}"
 
+      - name: Prepare Firebase Android configuration
+        shell: bash
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}
+        run: |
+          set -euo pipefail
+          test -n "$GOOGLE_SERVICES_JSON"
+          printf '%s' "$GOOGLE_SERVICES_JSON" > Platforms/Android/google-services.json
+
       - name: Restore Android dependencies
         run: >-
           dotnet restore "${PROJECT_FILE}"
