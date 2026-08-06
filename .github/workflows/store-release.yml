@@ -75,6 +75,15 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Isolate conflicting .NET 10 workload manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest_dir="${DOTNET_ROOT}/sdk-manifests/10.0.100"
+          if [ -d "$manifest_dir" ]; then
+            sudo mv "$manifest_dir" "${RUNNER_TEMP}/sdk-manifests-10.0.100"
+          fi
+
       - name: Install .NET MAUI Android workload
         run: dotnet workload install maui-android --version "${DOTNET_WORKLOAD_SET}"
 
@@ -173,6 +182,15 @@ jobs:
 
       - name: Select Xcode 26.5
         run: sudo xcode-select --switch /Applications/Xcode_26.5.app
+
+      - name: Isolate conflicting .NET 10 workload manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest_dir="${DOTNET_ROOT}/sdk-manifests/10.0.100"
+          if [ -d "$manifest_dir" ]; then
+            sudo mv "$manifest_dir" "${RUNNER_TEMP}/sdk-manifests-10.0.100"
+          fi
 
       - name: Install .NET MAUI iOS workload
         run: dotnet workload install maui-ios --version "${DOTNET_WORKLOAD_SET}"
