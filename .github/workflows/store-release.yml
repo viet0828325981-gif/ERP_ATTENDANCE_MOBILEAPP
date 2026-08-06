@@ -1,0 +1,257 @@
+name: Store release
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Nền tảng cần build/phát hành
+        required: true
+        type: choice
+        default: both
+        options:
+          - both
+          - android
+          - ios
+      version_name:
+        description: Phiên bản hiển thị trên store (ví dụ 1.0)
+        required: true
+        type: string
+        default: 1.0
+      deploy:
+        description: Upload artifact lên store sau khi build
+        required: true
+        type: boolean
+        default: false
+      android_track:
+        description: Google Play track
+        required: true
+        type: choice
+        default: internal
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+      android_status:
+        description: Trạng thái Google Play release
+        required: true
+        type: choice
+        default: draft
+        options:
+          - draft
+          - completed
+
+concurrency:
+  group: store-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  APP_ID: vn.moon.tinhcong
+  DOTNET_VERSION: 9.0.314
+  DOTNET_WORKLOAD_SET: 9.0.314.3
+  PROJECT_FILE: ERP_PAYROLLMOBILE.csproj
+
+jobs:
+  android:
+    name: Android / Google Play
+    if: inputs.platform == 'both' || inputs.platform == 'android'
+    runs-on: ubuntu-24.04
+    environment: store-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install .NET MAUI Android workload
+        run: dotnet workload install maui-android --version "${DOTNET_WORKLOAD_SET}"
+
+      - name: Prepare Firebase Android configuration
+        shell: bash
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}
+        run: |
+          set -euo pipefail
+          test -n "$GOOGLE_SERVICES_JSON"
+          printf '%s' "$GOOGLE_SERVICES_JSON" > Platforms/Android/google-services.json
+
+      - name: Restore Android dependencies
+        run: >-
+          dotnet restore "${PROJECT_FILE}"
+          -p:TargetFrameworks=net9.0-android
+          -p:TargetFramework=net9.0-android
+
+      - name: Prepare Android signing key
+        id: android_signing
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_BASE64"
+          keystore_path="$RUNNER_TEMP/moon-tinhcong.keystore"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          chmod 600 "$keystore_path"
+          echo "keystore_path=$keystore_path" >> "$GITHUB_OUTPUT"
+
+      - name: Build signed Android App Bundle
+        shell: bash
+        env:
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          dotnet publish "$PROJECT_FILE" \
+            -f net9.0-android \
+            -c Release \
+            --no-restore \
+            -p:TargetFrameworks=net9.0-android \
+            -p:ApplicationId="$APP_ID" \
+            -p:ApplicationDisplayVersion="${{ inputs.version_name }}" \
+            -p:ApplicationVersion="${{ github.run_number }}" \
+            -p:AndroidPackageFormats=aab \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="${{ steps.android_signing.outputs.keystore_path }}" \
+            -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS" \
+            -p:AndroidSigningKeyPass="$ANDROID_KEY_PASSWORD" \
+            -p:AndroidSigningStorePass="$ANDROID_KEYSTORE_PASSWORD"
+
+      - name: Locate signed AAB
+        id: android_artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          aab_path="$(find "$GITHUB_WORKSPACE/bin/Release/net9.0-android" -type f -iname '*-signed.aab' -print -quit)"
+          test -n "$aab_path"
+          echo "aab_path=$aab_path" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: moon-tinhcong-android-${{ inputs.version_name }}-${{ github.run_number }}
+          path: ${{ steps.android_artifact.outputs.aab_path }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload to Google Play
+        if: inputs.deploy
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ env.APP_ID }}
+          releaseFiles: ${{ steps.android_artifact.outputs.aab_path }}
+          tracks: ${{ inputs.android_track }}
+          status: ${{ inputs.android_status }}
+          releaseName: ${{ inputs.version_name }} (${{ github.run_number }})
+
+  ios:
+    name: iOS / App Store Connect
+    if: inputs.platform == 'both' || inputs.platform == 'ios'
+    runs-on: macos-26
+    environment: store-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Select Xcode 26.5
+        run: sudo xcode-select --switch /Applications/Xcode_26.5.app
+
+      - name: Install .NET MAUI iOS workload
+        run: dotnet workload install maui-ios --version "${DOTNET_WORKLOAD_SET}"
+
+      - name: Import Apple Distribution certificate
+        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
+        with:
+          p12-file-base64: ${{ secrets.APPSTORE_CERTIFICATES_FILE_BASE64 }}
+          p12-password: ${{ secrets.APPSTORE_CERTIFICATES_PASSWORD }}
+
+      - name: Download App Store provisioning profile
+        id: provisioning
+        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4
+        with:
+          bundle-id: ${{ env.APP_ID }}
+          profile-type: IOS_APP_STORE
+          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: Identify Apple signing identity
+        id: ios_signing
+        shell: bash
+        run: |
+          set -euo pipefail
+          codesign_key="$(security find-identity -v -p codesigning | sed -nE 's/^[[:space:]]*[0-9]+\) [0-9A-F]+ "(.*)"$/\1/p' | head -n 1)"
+          test -n "$codesign_key"
+          echo "codesign_key=$codesign_key" >> "$GITHUB_OUTPUT"
+
+      - name: Restore iOS dependencies
+        run: >-
+          dotnet restore "${PROJECT_FILE}"
+          -p:TargetFrameworks=net9.0-ios
+          -p:TargetFramework=net9.0-ios
+          -r ios-arm64
+
+      - name: Build signed iOS archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet publish "$PROJECT_FILE" \
+            -f net9.0-ios \
+            -c Release \
+            -r ios-arm64 \
+            --no-restore \
+            -p:TargetFrameworks=net9.0-ios \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:ApplicationId="$APP_ID" \
+            -p:ApplicationDisplayVersion="${{ inputs.version_name }}" \
+            -p:ApplicationVersion="${{ github.run_number }}" \
+            -p:ArchiveOnBuild=true \
+            -p:BuildIpa=true \
+            -p:CodesignKey="${{ steps.ios_signing.outputs.codesign_key }}" \
+            -p:CodesignProvision="${{ fromJSON(steps.provisioning.outputs.profiles)[0].name }}"
+
+      - name: Locate IPA
+        id: ios_artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          ipa_path="$(find "$GITHUB_WORKSPACE/bin/Release/net9.0-ios" -type f -name '*.ipa' -print -quit)"
+          test -n "$ipa_path"
+          echo "ipa_path=$ipa_path" >> "$GITHUB_OUTPUT"
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: moon-tinh-cong-ios-${{ inputs.version_name }}-${{ github.run_number }}
+          path: ${{ steps.ios_artifact.outputs.ipa_path }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload to App Store Connect / TestFlight
+        if: inputs.deploy
+        uses: apple-actions/upload-testflight-build@1ad58030672057aa084b4e96beb6f7a8c627f9e6 # v5
+        with:
+          app-path: ${{ steps.ios_artifact.outputs.ipa_path }}
+          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          uses-non-exempt-encryption: 'false'
+          wait-for-processing: 'true'
