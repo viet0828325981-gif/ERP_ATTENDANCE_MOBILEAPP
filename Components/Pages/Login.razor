@@ -6,6 +6,7 @@
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject IPushNotificationService PushNotificationService
+@inject MobileTokenRegistrationService MobileTokenRegistrationService
 
 <PageTitle>Đăng nhập</PageTitle>
 
@@ -74,22 +75,42 @@
         isBusy = true;
         errorMessage = null;
 
-        var result = await IdentityAuthService.LoginAsync(loginRequest);
-        if (!result.Success || string.IsNullOrWhiteSpace(result.Jwt) || string.IsNullOrWhiteSpace(result.UserId) || string.IsNullOrWhiteSpace(result.EmployeeId))
+        try
         {
-            errorMessage = result.ErrorMessage ?? "Đăng nhập thất bại.";
+            var result = await IdentityAuthService.LoginAsync(loginRequest);
+            if (!result.Success || string.IsNullOrWhiteSpace(result.Jwt) || string.IsNullOrWhiteSpace(result.UserId) || string.IsNullOrWhiteSpace(result.EmployeeId))
+            {
+                errorMessage = result.ErrorMessage ?? "Đăng nhập thất bại.";
+                isBusy = false;
+                return;
+            }
+
+            await AuthStateProvider.SignInAsync(result.UserId, result.EmployeeId, result.CompanyId, result.Jwt, result.Role, loginRequest.RememberMe);
+            await RegisterFcmTokenAsync();
+
+            Navigation.NavigateTo("/", replace: true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Đăng nhập thất bại: {ex.Message}";
             isBusy = false;
-            return;
         }
+    }
 
-        await AuthStateProvider.SignInAsync(result.UserId, result.EmployeeId, result.CompanyId, result.Jwt, result.Role, loginRequest.RememberMe);
-        var fcmToken = await PushNotificationService.InitializeAsync();
-
-        if (!string.IsNullOrWhiteSpace(fcmToken))
+    private async Task RegisterFcmTokenAsync()
+    {
+        try
         {
-            await JS.InvokeVoidAsync("alert", $"FCM Token: {fcmToken}");
-        }
+            var fcmToken = await PushNotificationService.InitializeAsync();
+            await JS.InvokeVoidAsync("alert", $"[FCM DEBUG] Token: {fcmToken ?? "null"}");
 
-        Navigation.NavigateTo("/", replace: true);
+            var apiDebugMessage = await MobileTokenRegistrationService.RegisterCurrentEmployeeTokenAsync(fcmToken);
+            await JS.InvokeVoidAsync("alert", $"[API DEBUG] {apiDebugMessage}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Không đồng bộ được FCM token sau đăng nhập: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", $"[API DEBUG ERROR] {ex.Message}");
+        }
     }
 }

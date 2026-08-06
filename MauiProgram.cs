@@ -87,6 +87,8 @@ namespace ERP_PAYROLLMOBILE
             builder.Services.AddScoped<IShiftFeatureService, ShiftFeatureService>();
             builder.Services.AddScoped<IPayrollFeatureService, PayrollFeatureService>();
             builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
+            builder.Services.AddScoped<MobileAppApiClient>();
+            builder.Services.AddScoped<MobileTokenRegistrationService>();
             builder.Services.AddScoped<LogInApiclient>();
             builder.Services.AddScoped<EmployeeBreakdownRequestBuilder>();
             builder.Services.AddScoped<EmployeeRequestRequestBuilder>();
