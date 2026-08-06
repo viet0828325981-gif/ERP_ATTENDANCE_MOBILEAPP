@@ -1,4 +1,4 @@
-@using System.Globalization
+﻿@using System.Globalization
 @inject ShiftcodeApiClient ShiftcodeApiClient
 @inject ISnackbar Snackbar
 
@@ -50,6 +50,10 @@
                         <MudSelectItem Value="@option.Code">@option.Code - @option.Name</MudSelectItem>
                     }
                 </MudSelect>
+
+                <MudCheckBox T="bool"
+                             @bind-Value="includeSundayForMonth"
+                             Label="Đăng ký cả ngày chủ nhật trong tháng" />
             }
 
             <MudTextField T="string"
@@ -83,6 +87,7 @@
     private ShiftRegistrationMode registrationMode = ShiftRegistrationMode.Week;
     private DateOnly weekStartDate;
     private string? monthShiftCode;
+    private bool includeSundayForMonth;
     private string? note;
     private bool isSaving;
 
@@ -186,6 +191,8 @@
         var request = new ShiftRegistrationCreateModel
         {
             EmployeeId = EmployeeId,
+            Year = SelectedMonth.Year,
+            Month = SelectedMonth.Month,
             CreatedBy = string.IsNullOrWhiteSpace(CreatedBy) ? EmployeeId : CreatedBy,
             WeekStartDate = registrationMode == ShiftRegistrationMode.Week
                 ? weekStartDate
@@ -205,13 +212,14 @@
         }
         else
         {
+            request.ShiftCode = monthShiftCode;
             request.MonShiftCode = monthShiftCode;
             request.TueShiftCode = monthShiftCode;
             request.WedShiftCode = monthShiftCode;
             request.ThuShiftCode = monthShiftCode;
             request.FriShiftCode = monthShiftCode;
             request.SatShiftCode = monthShiftCode;
-            request.SunShiftCode = monthShiftCode;
+            request.SunShiftCode = includeSundayForMonth ? monthShiftCode : null;
         }
 
         return request;

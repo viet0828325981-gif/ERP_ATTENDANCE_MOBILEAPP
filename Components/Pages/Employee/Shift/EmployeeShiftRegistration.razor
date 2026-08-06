@@ -50,13 +50,13 @@
 
         <div class="info-card @(isShiftDetailsOpen ? "open" : null)">
             <div class="info-header" @onclick="ToggleShiftDetails">
-                <div class="info-icon">
+                <div class="info-icon detail-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
                         <rect x="3" y="4" width="18" height="18" rx="2" />
                         <path d="M16 2v4M8 2v4M3 10h18" />
                     </svg>
                 </div>
-                <div class="info-text">
+                <div class="info-text detail-header-text">
                     <div class="info-title">Chi tiết đăng ký ca</div>
                     <div class="info-sub">@shiftOptions.Count loại ca làm · Nhấn để xem</div>
                 </div>
@@ -75,13 +75,13 @@
 
         <div class="overview-card">
             <div class="overview-header">
-                <div class="info-icon">
+                <div class="info-icon overview-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
                         <circle cx="12" cy="12" r="9" />
                         <path d="M12 3v9l6 3" />
                     </svg>
                 </div>
-                <div class="info-text">
+                <div class="info-text overview-header-text">
                     <div class="info-title">Tổng quan</div>
                     <div class="info-sub">Tỷ lệ ngày đã đăng ký</div>
                 </div>
@@ -190,7 +190,7 @@
         .Select(item => item.WorkDate.Day)
         .ToHashSet();
 
-    private int TotalRegistrationDays => Math.Max(overview.MaxDaysInMonth, 0);
+    private int TotalRegistrationDays => CountNonSundayDaysInMonth(selectedMonth.Year, selectedMonth.Month);
 
     private int RegisteredDays => Math.Max(overview.RegisteredDays, 0);
 
@@ -323,6 +323,22 @@
     private static bool HasRegisteredShift(ShiftRegistrationDayModel item)
     {
         return item.HasShiftRegistration || !string.IsNullOrWhiteSpace(item.RegisteredShiftCode);
+    }
+
+    private static int CountNonSundayDaysInMonth(int year, int month)
+    {
+        var daysInMonth = DateTime.DaysInMonth(year, month);
+        var total = 0;
+
+        for (var day = 1; day <= daysInMonth; day++)
+        {
+            if (new DateOnly(year, month, day).DayOfWeek != DayOfWeek.Sunday)
+            {
+                total++;
+            }
+        }
+
+        return total;
     }
 
     private async Task OpenRegistrationDialogAsync()

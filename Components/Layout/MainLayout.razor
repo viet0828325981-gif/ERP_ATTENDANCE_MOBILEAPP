@@ -1,12 +1,4 @@
-﻿@inherits LayoutComponentBase
-@implements IDisposable
-@using ERP_PAYROLLMOBILE.Api.MANAGERROLE
-@using ERP_PAYROLLMOBILE.Models.ManagerRole.ManagerDepartments
-@using ERP_PAYROLLMOBILE.Services.RoleScope
-@inject ManagerDepartmentsApiClient ManagerDepartmentsApiClient
-@inject MoonAuthenticationStateProvider AuthStateProvider
-@inject NavigationManager Navigation
-@inject IRoleScopeService RoleScopeService
+@inherits LayoutComponentBase
 
 <MudThemeProvider />
 <MudPopoverProvider />
@@ -18,120 +10,9 @@
 
     <div class="layout-shell">
         <main>
-            @if (showDepartmentSelector)
-            {
-                <div class="manager-scope-bar">
-                    <select id="managerDepartmentSelect" class="manager-scope-select" value="@selectedDepartmentIdText" @onchange="OnDepartmentChangedAsync">
-                        <option value="">Chọn phòng ban</option>
-                        @foreach (var department in departments)
-                        {
-                            <option value="@department.DepartmentId">@department.DepartmentName</option>
-                        }
-                    </select>
-                </div>
-            }
-
             <article class="content">
                 @Body
             </article>
         </main>
     </div>
 </div>
-
-@code {
-    private List<ManagerDepartmentModel> departments = new();
-    private string currentPath = string.Empty;
-    private bool showDepartmentSelector;
-    private bool isLoadingDepartments;
-    private string? selectedDepartmentIdText;
-
-    private bool IsManagerRoute => currentPath.StartsWith("manager", StringComparison.OrdinalIgnoreCase);
-    private string CurrentManagerTab => GetCurrentManagerTab();
-
-    protected override void OnInitialized()
-    {
-        currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
-        showDepartmentSelector = RoleScopeService.Current.CanUseManagerScope;
-        selectedDepartmentIdText = RoleScopeService.Current.DepartmentId?.ToString();
-        RoleScopeService.Changed += OnRoleScopeChanged;
-        Navigation.LocationChanged += OnLocationChanged;
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await EnsureRoleScopeAsync();
-    }
-
-    private async Task EnsureRoleScopeAsync()
-    {
-        var scope = RoleScopeService.Current.IsLoaded
-            ? RoleScopeService.Current
-            : await RoleScopeService.LoadAsync();
-
-        showDepartmentSelector = scope.CanUseManagerScope;
-        selectedDepartmentIdText = scope.DepartmentId?.ToString();
-
-        if (showDepartmentSelector && departments.Count == 0 && !isLoadingDepartments)
-        {
-            isLoadingDepartments = true;
-            try
-            {
-                departments = (await ManagerDepartmentsApiClient.GetDepartmentsAsync(scope.CompanyId))
-                    .Where(item => item.IsActive)
-                    .OrderBy(item => item.Order)
-                    .ThenBy(item => item.DepartmentName)
-                    .ToList();
-
-                RoleScopeService.SetDepartments(departments);
-                selectedDepartmentIdText = RoleScopeService.Current.DepartmentId?.ToString();
-            }
-            finally
-            {
-                isLoadingDepartments = false;
-            }
-        }
-    }
-
-    private void OnRoleScopeChanged()
-    {
-        departments = RoleScopeService.Current.Departments;
-        selectedDepartmentIdText = RoleScopeService.Current.DepartmentId?.ToString();
-        showDepartmentSelector = RoleScopeService.Current.CanUseManagerScope;
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        currentPath = Navigation.ToBaseRelativePath(e.Location);
-        InvokeAsync(StateHasChanged);
-    }
-
-    private Task OnDepartmentChangedAsync(ChangeEventArgs args)
-    {
-        selectedDepartmentIdText = args.Value?.ToString();
-        Guid? departmentId = Guid.TryParse(selectedDepartmentIdText, out var value) ? value : null;
-        RoleScopeService.SetScope(departmentId, RoleScopeService.Current.SelectedEmployeeId);
-        return Task.CompletedTask;
-    }
-
-    public void Dispose()
-    {
-        RoleScopeService.Changed -= OnRoleScopeChanged;
-        Navigation.LocationChanged -= OnLocationChanged;
-    }
-
-    private string GetCurrentManagerTab()
-    {
-        if (currentPath.StartsWith("manager/requests", StringComparison.OrdinalIgnoreCase))
-        {
-            return "QL yêu cầu";
-        }
-
-        if (currentPath.StartsWith("manager/shift", StringComparison.OrdinalIgnoreCase))
-        {
-            return "QL ca";
-        }
-
-        return "QL công";
-    }
-}

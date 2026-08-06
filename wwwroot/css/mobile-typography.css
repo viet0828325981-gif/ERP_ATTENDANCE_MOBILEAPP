@@ -1,0 +1,128 @@
+/* Mobile typography scale from MobileDesignGuide.md. Loaded after scoped styles. */
+
+body,
+button,
+input,
+select,
+textarea {
+    font-family: var(--app-font);
+}
+
+/* One consistent screen-title level. */
+:is(.page-title, .shift-registration-title, .header-title, .register-title) {
+    font-size: var(--type-screen-title) !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    letter-spacing: 0 !important;
+}
+
+/* Section and card titles. */
+:is(.section-title, .info-title, .suggest-card-title,
+    .register-summary-title, .modal-title h2, .check-log-title,
+    .request-form-title, .details-title) {
+    font-size: var(--type-section-title) !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
+    letter-spacing: 0 !important;
+}
+
+:is(.request-title, .salary-label, .row-card-title, .attendance-detail-value,
+    .employee-name, .catalog-title) {
+    font-size: var(--type-card-title) !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0 !important;
+}
+
+/* Main descriptive copy and list values. */
+:is(.attendance-intro-text, .request-intro-text, .intro-text, .payroll-subtitle,
+    .page-subtitle, .shift-registration-subtitle, .work-analysis-label,
+    .request-detail-value, .attendance-work .work-count,
+    .check-log-state, .inline-reason p) {
+    font-size: var(--type-body) !important;
+    font-weight: 400 !important;
+    line-height: 1.55 !important;
+    letter-spacing: 0 !important;
+}
+
+.attendance-times .times,
+.attendance-work .work-count {
+    font-size: var(--type-label) !important;
+    font-weight: 400 !important;
+    line-height: 1.4 !important;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Form labels, KPI labels, and compact list labels. */
+:is(.app-label, .filter-field label, .payroll-field label, .attendance-field label,
+    .attendance-field span, .stat-label, .attendance-detail-label,
+    .request-detail-label, .section-label, .salary-chip .salary-label,
+    .detail-label, .register-label) {
+    font-size: var(--type-label) !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0 !important;
+}
+
+/* Supporting dates, descriptions, and helper content. */
+:is(.info-sub, .section-sub, .section-subtitle, .request-date, .request-subtitle,
+    .suggest-note, .attendance-date .weekday, .check-log-date,
+    .register-subtitle, .register-summary-text, .day .shift) {
+    font-size: var(--type-helper) !important;
+    font-weight: 400 !important;
+    line-height: 1.35 !important;
+    letter-spacing: 0 !important;
+}
+
+/* Numeric data uses tabular figures for scanning and comparison. */
+:is(.stat-value, .salary-value) {
+    font-size: var(--type-stat) !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    font-variant-numeric: tabular-nums;
+}
+
+:is(.donut-ratio, .ratio-number, .summary-number) {
+    font-size: var(--type-stat-large) !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Buttons, chips, and statuses retain a compact, touch-friendly type scale. */
+:is(.app-btn-primary, .shift-registration-primary-button, .request-primary-button,
+    .payroll-primary-button, .apply-button, .mode-option, .search-btn,
+    .btn-primary, .primary-button, .outline-button) {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+}
+
+:is(.status-badge, .pill-status, .attendance-status, .attendance-shift,
+    .shift-code, .date-chip, .badge-live, .status-approved,
+    .status-pending, .status-rejected, .status-cancelled) {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+}
+
+/* Calendar labels use fixed values from the guide, not viewport-scaled text. */
+.cal-header {
+    font-size: var(--type-section-title) !important;
+    line-height: 1.35 !important;
+}
+
+.weekdays span {
+    font-size: var(--type-label) !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+}
+
+.day .solar {
+    font-size: var(--type-card-title) !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    font-variant-numeric: tabular-nums;
+}

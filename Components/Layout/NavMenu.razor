@@ -1,8 +1,6 @@
-﻿@implements IDisposable
 @using Microsoft.AspNetCore.Components.Authorization
 @inject MoonAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
-@inject ERP_PAYROLLMOBILE.Services.RoleScope.IRoleScopeService RoleScopeService
 
 <header class="topbar app-topbar">
     <a class="brand" href="">ERP_EMPLOYEE</a>
@@ -19,7 +17,7 @@
     </div>
 </header>
 
-<nav class="bottom-nav @(canUseManagerMenu ? "bottom-nav-manager" : string.Empty)" aria-label="Employee menu">
+<nav class="bottom-nav" aria-label="Employee menu">
     <div class="bottom-nav-track">
         @foreach (var item in NavItems)
         {
@@ -31,77 +29,17 @@
 </nav>
 
 @code {
-    private bool canUseManagerMenu;
-    private string attendanceHref = "/employee/daily";
-
-    private IReadOnlyList<(string Label, string Href, NavLinkMatch Match)> NavItems =>
-        canUseManagerMenu
-            ?
-            [
-                ("Chấm công", attendanceHref, NavLinkMatch.All),
-                ("QL công", "/manager/daily", NavLinkMatch.Prefix),
-                ("QL yêu cầu", "/manager/requests", NavLinkMatch.Prefix),
-                ("QL ca", "/manager/shift", NavLinkMatch.Prefix)
-            ]
-            :
-            [
-                ("Chấm công", attendanceHref, NavLinkMatch.Prefix),
-                ("Yêu cầu", "/yeu-cau", NavLinkMatch.Prefix),
-                ("Đăng ký ca", "/dang-ky-ca", NavLinkMatch.Prefix),
-                ("Lương cơ bản", "/luong-co-ban", NavLinkMatch.Prefix)
-            ];
-
-    protected override async Task OnInitializedAsync()
-    {
-        RoleScopeService.Changed += OnRoleScopeChanged;
-
-        if (RoleScopeService.Current.IsLoaded)
-        {
-            ApplyScope(RoleScopeService.Current);
-        }
-        else
-        {
-            await RefreshNavigationAsync();
-        }
-    }
-
-    private async Task RefreshNavigationAsync()
-    {
-        var scope = RoleScopeService.Current.IsLoaded
-            ? RoleScopeService.Current
-            : await RoleScopeService.LoadAsync();
-
-        ApplyScope(scope);
-    }
-
-    private void OnRoleScopeChanged()
-    {
-        _ = InvokeAsync(RefreshNavigationAsync);
-    }
-
-    private void ApplyScope(ERP_PAYROLLMOBILE.Services.RoleScope.RoleScopeState scope)
-    {
-        var nextCanUseManagerMenu = scope.CanUseManagerScope;
-        var nextAttendanceHref = nextCanUseManagerMenu ? "/manager/daily" : "/employee/daily";
-
-        if (canUseManagerMenu == nextCanUseManagerMenu && string.Equals(attendanceHref, nextAttendanceHref, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        canUseManagerMenu = nextCanUseManagerMenu;
-        attendanceHref = nextAttendanceHref;
-        _ = InvokeAsync(StateHasChanged);
-    }
+    private static readonly IReadOnlyList<(string Label, string Href, NavLinkMatch Match)> NavItems =
+    [
+        ("Chấm công", "/employee/daily", NavLinkMatch.Prefix),
+        ("Yêu cầu", "/yeu-cau", NavLinkMatch.Prefix),
+        ("Đăng ký ca", "/dang-ky-ca", NavLinkMatch.Prefix),
+        ("Lương cơ bản", "/luong-co-ban", NavLinkMatch.Prefix)
+    ];
 
     private void Logout()
     {
         AuthStateProvider.SignOut();
         Navigation.NavigateTo("/login", replace: true);
-    }
-
-    public void Dispose()
-    {
-        RoleScopeService.Changed -= OnRoleScopeChanged;
     }
 }

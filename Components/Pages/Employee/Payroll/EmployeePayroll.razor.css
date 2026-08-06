@@ -1,22 +1,23 @@
-/* Khung tổng thể màn phân tích lương */
+/* Khung tá»•ng thá»ƒ mÃ n phÃ¢n tÃ­ch lÆ°Æ¡ng */
 .payroll-page {
     width: 100%;
     min-height: 100vh;
     background: var(--bg-page);
 }
 
-/* Vùng nội dung chính, chừa khoảng cho bottom nav */
+/* VÃ¹ng ná»™i dung chÃ­nh, chá»«a khoáº£ng cho bottom nav */
 .payroll-shell {
     padding: clamp(16px, 4vw, 24px) 0 90px;
 }
 
-/* Tiêu đề và mô tả đầu màn */
+/* TiÃªu Ä‘á» vÃ  mÃ´ táº£ Ä‘áº§u mÃ n */
 .page-title {
     font-size: clamp(20px, 5vw, 24px);
     font-weight: 800;
     color: var(--text-main);
-    letter-spacing: .3px;
-    margin: 0 0 4px;
+    letter-spacing: 0;
+    line-height: 1.3;
+    margin: 0 0 var(--space-section);
 }
 
 .payroll-subtitle {
@@ -40,7 +41,7 @@
     font-weight: 500;
 }
 
-/* Bộ lọc tháng/năm */
+/* Bá»™ lá»c thÃ¡ng/nÄƒm */
 .payroll-filters {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -64,7 +65,7 @@
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: .4px;
+    letter-spacing: 0;
     margin-bottom: 6px;
 }
 
@@ -73,7 +74,7 @@
     width: 100%;
     border: 1px solid var(--divider);
     background: var(--bg-card);
-    border-radius: var(--radius-input);
+    border-radius: 10px;
     min-height: clamp(36px, 8vw, 40px);
     padding: clamp(8px, 2.5vw, 10px);
     font-size: clamp(12px, 2.8vw, 13px);
@@ -86,18 +87,18 @@
 .payroll-primary-button {
     width: 100%;
     border: none;
-    border-radius: var(--radius-btn);
+    border-radius: 10px;
     min-height: clamp(38px, 8.5vw, 44px);
     padding: clamp(10px, 3vw, 13px);
     font-size: clamp(12px, 2.9vw, 13.5px);
     font-weight: 800;
-    letter-spacing: .5px;
+    letter-spacing: 0;
     margin-bottom: 0;
     font-family: var(--app-font);
     cursor: pointer;
 }
 
-/* Hai chip lương chính */
+/* Hai chip lÆ°Æ¡ng chÃ­nh */
 
 .salary-label-row {
     display: flex;
@@ -111,13 +112,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     border: 0;
-    border-radius: 999px;
+    border-radius: 10px;
     background: rgba(67, 56, 202, 0.1);
-    color: #4338ca;
-    box-shadow: 0 4px 12px rgba(67,56,202,0.12);
+    color: #4338CA;
+    box-shadow: 0 4px 12px rgba(67, 56, 202,0.12);
     cursor: pointer;
     transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
     flex-shrink: 0;
@@ -131,7 +132,7 @@
 
 .salary-visibility-button:hover {
     background: rgba(67, 56, 202, 0.16);
-    box-shadow: 0 6px 14px rgba(67,56,202,0.18);
+    box-shadow: 0 6px 14px rgba(67, 56, 202,0.18);
     transform: translateY(-1px);
 }
 
@@ -160,31 +161,37 @@
 
 .salary-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(8px, 2.4vw, 10px);
-    margin-bottom: clamp(12px, 3vw, 16px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: var(--space-list-gap);
+    margin-bottom: var(--space-section);
 }
 
 .salary-chip {
-    border-radius: 16px;
-    padding: clamp(12px, 3vw, 14px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-radius: 10px;
+    padding: 12px;
+    min-height: 70px;
 }
 
 .salary-chip.primary {
     background: linear-gradient(135deg, var(--grad-from), var(--grad-to));
-    box-shadow: 0 10px 20px rgba(67,56,202,0.25);
+    box-shadow: 0 10px 20px rgba(67, 56, 202,0.25);
 }
 
 .salary-chip.secondary {
     background: var(--bg-card);
-    box-shadow: 0 8px 22px rgba(20,20,40,0.05);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .salary-label {
-    font-size: clamp(9.5px, 2.4vw, 10.5px);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .3px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-transform: none;
+    letter-spacing: 0;
     margin-bottom: 6px;
 }
 
@@ -197,8 +204,10 @@
 }
 
 .salary-value {
-    font-size: clamp(15px, 4.4vw, 18px);
-    font-weight: 800;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
 }
 
 .salary-chip.primary .salary-value {
@@ -209,53 +218,103 @@
     color: var(--text-main);
 }
 
-/* Card trắng dùng chung */
+/* Card tráº¯ng dÃ¹ng chung */
 .payroll-card {
     background: var(--bg-card);
-    border-radius: 18px;
+    border-radius: 10px;
     padding: clamp(12px, 3.5vw, 16px);
-    box-shadow: 0 8px 22px rgba(20,20,40,0.05);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     margin-bottom: clamp(12px, 3vw, 14px);
 }
 
-/* Grid chỉ số công */
-.stat-grid {
+/* Danh sach chi so cong */
+.work-card {
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 10px;
+    padding: clamp(18px, 4vw, 24px);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.work-card .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin-bottom: 4px;
+}
+
+.work-card .section-sub {
+    font-size: 13px;
+    margin-bottom: clamp(20px, 4vw, 28px);
+}
+
+.work-analysis-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.work-analysis-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: clamp(5px, 1.8vw, 8px);
+    grid-template-columns: minmax(0, 1fr) 116px minmax(48px, auto);
+    align-items: center;
+    column-gap: clamp(12px, 4vw, 28px);
+    min-height: clamp(42px, 10vw, 52px);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
-.stat-cell {
-    background: #f7f7fb;
-    border-radius: 12px;
-    padding: clamp(7px, 2.2vw, 9px) clamp(3px, 1.2vw, 4px);
-    text-align: center;
+.work-analysis-row:first-child {
+    min-height: clamp(46px, 11vw, 56px);
 }
 
-.stat-cell .num {
-    font-size: clamp(12px, 3.4vw, 14px);
-    font-weight: 800;
+.work-analysis-row:last-child {
+    border-bottom: none;
+}
+
+.work-analysis-label {
+    min-width: 0;
     color: var(--text-main);
-    line-height: 1.2;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.25;
 }
 
-.stat-cell .num.accent {
-    color: var(--accent);
+.work-analysis-row.emphasis .work-analysis-label,
+.work-analysis-row.emphasis .work-analysis-value {
+    font-weight: 800;
 }
 
-.stat-cell .num.warn {
+.work-analysis-track {
+    width: 116px;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #d8f1df;
+}
+
+.work-analysis-fill {
+    display: block;
+    height: 100%;
+    min-width: 0;
+    border-radius: 10px;
+    background: #55b987;
+}
+
+.work-analysis-row.emphasis .work-analysis-fill {
+    background: #3C3489;
+}
+
+.work-analysis-value {
+    color: #4338CA;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1;
+    text-align: right;
+}
+
+.work-analysis-row.warning .work-analysis-value {
     color: #ea580c;
 }
 
-.stat-cell .lbl {
-    font-size: clamp(8px, 2.2vw, 9.5px);
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-top: 3px;
-    line-height: 1.2;
-}
-
-/* Donut đôi trong cùng một card */
+/* Donut Ä‘Ã´i trong cÃ¹ng má»™t card */
 .donut-pair {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -317,7 +376,7 @@
     margin-top: 1px;
 }
 
-/* Nhãn dữ liệu thực */
+/* NhÃ£n dá»¯ liá»‡u thá»±c */
 .badge-live {
     display: inline-block;
     font-size: clamp(9.5px, 2.4vw, 10.5px);
@@ -325,11 +384,11 @@
     color: var(--accent);
     background: var(--accent-soft-bg);
     padding: 4px clamp(8px, 2.5vw, 10px);
-    border-radius: 999px;
+    border-radius: 10px;
     margin-bottom: 12px;
 }
 
-/* Hai card nhỏ công phép / đăng ký ca */
+/* Hai card nhá» cÃ´ng phÃ©p / Ä‘Äƒng kÃ½ ca */
 .two-col {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -357,7 +416,7 @@
     color: var(--accent);
     font-weight: 800;
     font-size: clamp(10.5px, 2.6vw, 11.5px);
-    letter-spacing: .3px;
+    letter-spacing: 0;
     padding: clamp(8px, 2.5vw, 9px);
     border-radius: 10px;
     margin-bottom: 10px;
@@ -392,7 +451,7 @@
 
 .empty-box {
     border: 1.5px dashed var(--divider);
-    border-radius: 12px;
+    border-radius: 10px;
     padding: clamp(12px, 3.5vw, 16px);
     text-align: center;
     font-size: clamp(11px, 2.6vw, 12px);
@@ -400,7 +459,7 @@
     font-weight: 500;
 }
 
-/* Bảng chi tiết công đặc biệt khi có dữ liệu */
+/* Báº£ng chi tiáº¿t cÃ´ng Ä‘áº·c biá»‡t khi cÃ³ dá»¯ liá»‡u */
 .simple-table {
     overflow-x: auto;
 }
@@ -438,7 +497,7 @@
     grid-template-columns: .8fr repeat(4, 1fr);
 }
 
-/* Modal lịch sử / chi tiết ca */
+/* Modal lá»‹ch sá»­ / chi tiáº¿t ca */
 .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -455,7 +514,7 @@
     overflow: auto;
     padding: clamp(12px, 4vw, 16px);
     background: var(--bg-card);
-    border-radius: 18px;
+    border-radius: 10px;
     box-shadow: 0 18px 40px rgba(28, 29, 33, 0.14);
 }
 
@@ -504,8 +563,22 @@
         grid-template-columns: 1fr 1fr;
     }
 
-    .stat-grid {
-        grid-template-columns: repeat(4, 1fr);
+    .work-card .section-title {
+        font-size: 1.25rem;
+    }
+
+    .work-card .section-sub {
+        font-size: .875rem;
+    }
+
+    .work-analysis-row {
+        grid-template-columns: minmax(0, 1fr) 76px minmax(42px, auto);
+        column-gap: 10px;
+    }
+
+    .work-analysis-track {
+        width: 76px;
+        height: 8px;
     }
 }
 

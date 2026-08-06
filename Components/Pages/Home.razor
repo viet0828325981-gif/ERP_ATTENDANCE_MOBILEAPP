@@ -1,6 +1,4 @@
-@page "/"
-@using ERP_PAYROLLMOBILE.Services.RoleScope
-@inject IRoleScopeService RoleScopeService
+﻿@page "/"
 @inject NavigationManager Navigation
 
 <PageTitle>Điều hướng</PageTitle>
@@ -8,16 +6,8 @@
 <div class="home-redirect-state">Đang chuyển trang...</div>
 
 @code {
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        var scope = await RoleScopeService.LoadAsync();
-        var target = scope.Role switch
-        {
-            ERP_PAYROLLMOBILE.Services.RoleScope.AppRole.Manager => "/manager/daily",
-            ERP_PAYROLLMOBILE.Services.RoleScope.AppRole.Admin => "/manager/daily",
-            _ => "/employee/daily"
-        };
-
-        Navigation.NavigateTo(target, replace: true);
+        Navigation.NavigateTo("/employee/daily", replace: true);
     }
 }

@@ -1,8 +1,8 @@
-/* Khung tổng thể của màn yêu cầu công */
+/* Khung tá»•ng thá»ƒ cá»§a mÃ n yÃªu cáº§u cÃ´ng */
 .employee-request-page {
-    --request-primary: #4f46e5;
-    --request-primary-dark: #3730a3;
-    --request-bg-page: #fffff;
+    --request-primary: #5b4fe8;
+    --request-primary-dark: #4338ca;
+    --request-bg-page: var(--bg-page);
     --request-bg-surface: #ffffff;
     --request-text-primary: #111827;
     --request-text-secondary: #6b7280;
@@ -22,8 +22,8 @@
     --request-purple-text: #3c3489;
     --request-pink-bg: #fbeaf0;
     --request-pink-text: #72243e;
-    --request-indigo-bg: #e8e7fc;
-    --request-indigo-text: #4338ca;
+    --request-indigo-bg: #E8E7FC;
+    --request-indigo-text: #4338CA;
     --request-red-bg: #fcebeb;
     --request-red-text: #a32d2d;
     width: 100%;
@@ -34,13 +34,13 @@
     background: var(--request-bg-page);
 }
 
-/* Vùng nội dung chính của màn */
+/* VÃ¹ng ná»™i dung chÃ­nh cá»§a mÃ n */
 .request-page-content {
     flex: 1;
     padding: clamp(16px, 4vw, 20px) 0 90px;
 }
 
-/* Phần giới thiệu và CTA đầu màn */
+/* Pháº§n giá»›i thiá»‡u vÃ  CTA Ä‘áº§u mÃ n */
 .request-intro-row {
     display: flex;
     align-items: center;
@@ -56,7 +56,7 @@
     line-height: 1.5;
 }
 
-/* Filter đầu trang */
+/* Filter Ä‘áº§u trang */
 .filter-field {
     display: flex;
     flex-direction: column;
@@ -78,13 +78,13 @@
     font-size: clamp(10px, 2.4vw, 11px);
     font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0;
 }
 
 .filter-field select,
 .filter-field input {
     width: 100%;
-    height: clamp(36px, 8vw, 38px);
+    min-height: 44px;
     padding: 0 clamp(7px, 2vw, 8px);
     font-size: clamp(12px, 2.8vw, 13px);
     font-weight: 600;
@@ -100,16 +100,16 @@
 .filter-field input:focus {
     outline: none;
     border-color: var(--request-primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.15);
 }
 
-/* Nút tạo yêu cầu */
+/* NÃºt táº¡o yÃªu cáº§u */
 .request-primary-button {
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     gap: clamp(4px, 1.6vw, 6px);
-    height: clamp(38px, 8.5vw, 40px);
+    min-height: 44px;
     padding: 0 clamp(12px, 3vw, 16px);
     border: none;
     border-radius: 10px;
@@ -118,14 +118,15 @@
     font-size: clamp(12px, 2.8vw, 13px);
     font-weight: 600;
     font-family: var(--app-font);
-    background: var(--request-primary);
+    background: linear-gradient(135deg, var(--request-primary), var(--request-primary-dark));
+    box-shadow: 0 10px 20px rgba(67, 56, 202, 0.3);
     box-shadow: none;
     cursor: pointer;
     transition: background .15s ease;
 }
 
 .request-primary-button:hover {
-    background: var(--request-primary-dark);
+    background: linear-gradient(135deg, var(--request-primary-dark), var(--request-primary));
 }
 
 .request-primary-button svg {
@@ -133,12 +134,12 @@
     height: 16px;
 }
 
-/* Khối hiển thị thông báo và trạng thái rỗng */
+/* Khá»‘i hiá»ƒn thá»‹ thÃ´ng bÃ¡o vÃ  tráº¡ng thÃ¡i rá»—ng */
 .request-alert,
 .request-empty {
     margin-bottom: clamp(12px, 3vw, 16px);
     padding: clamp(12px, 3vw, 14px) clamp(12px, 3.5vw, 16px);
-    border-radius: 16px;
+    border-radius: 10px;
     border: 1px solid var(--request-border);
     font-size: clamp(12px, 2.8vw, 13px);
     font-weight: 600;
@@ -158,7 +159,7 @@
     background: var(--request-bg-surface);
 }
 
-/* Card hiển thị từng yêu cầu */
+/* Card hiá»ƒn thá»‹ tá»«ng yÃªu cáº§u */
 .request-list {
     list-style: none;
     margin: 0;
@@ -171,7 +172,7 @@
 .request-card {
     margin: 0;
     border: 1px solid var(--request-border);
-    border-radius: 12px;
+    border-radius: 10px;
     background: var(--request-bg-surface);
     box-shadow: none;
     overflow: hidden;
@@ -179,7 +180,7 @@
 }
 
 .request-card:hover {
-    border-color: #c7c9f5;
+    border-color: var(--color-primary-light);
 }
 
 .request-summary {
@@ -269,7 +270,7 @@
 
 .status-badge {
     padding: 5px 12px;
-    border-radius: 999px;
+    border-radius: 10px;
     font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
@@ -329,7 +330,7 @@
     white-space: pre-wrap;
 }
 
-/* Dòng thông tin bên trong card */
+/* DÃ²ng thÃ´ng tin bÃªn trong card */
 .request-detail-row {
     display: flex;
     align-items: center;
@@ -353,7 +354,7 @@
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0;
 }
 
 .request-detail-value {
@@ -363,11 +364,11 @@
     text-align: right;
 }
 
-/* Các pill hiển thị loại/trạng thái */
+/* CÃ¡c pill hiá»ƒn thá»‹ loáº¡i/tráº¡ng thÃ¡i */
 .pill {
     display: inline-block;
     padding: 5px 12px;
-    border-radius: 999px;
+    border-radius: 10px;
     font-size: 12px;
     font-weight: 700;
 }
@@ -388,7 +389,7 @@
     color: var(--danger);
 }
 
-/* Nút link và nút hủy */
+/* NÃºt link vÃ  nÃºt há»§y */
 .link-button {
     border: 0;
     padding: 0;
@@ -405,7 +406,7 @@
     background: var(--bg-card);
     font-weight: 800;
     font-size: 12px;
-    letter-spacing: 0.4px;
+    letter-spacing: 0;
     padding: 6px 16px;
     border-radius: 10px;
     font-family: var(--app-font);
@@ -416,7 +417,7 @@
     cursor: default;
 }
 
-/* Lớp phủ và khung modal */
+/* Lá»›p phá»§ vÃ  khung modal */
 .request-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -433,7 +434,7 @@
     overflow: auto;
     padding: 20px;
     background: var(--bg-card);
-    border-radius: var(--radius-card);
+    border-radius: 10px;
     box-shadow: 0 18px 40px rgba(28, 29, 33, 0.14);
 }
 
@@ -441,7 +442,7 @@
     width: min(64rem, 100%);
 }
 
-/* Header của modal */
+/* Header cá»§a modal */
 .request-modal-header {
     display: flex;
     align-items: flex-start;
@@ -496,7 +497,7 @@
     padding: clamp(12px, 3vw, 14px);
     background: var(--bg-card);
     border: 1px solid var(--divider);
-    border-radius: 16px;
+    border-radius: 10px;
 }
 
 .request-detail-grid span,
@@ -508,7 +509,7 @@
     font-size: clamp(10px, 2.4vw, 11px);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0;
 }
 
 .request-detail-grid strong,
@@ -533,7 +534,7 @@
 
 .compact-table {
     border: 1px solid var(--divider);
-    border-radius: 16px;
+    border-radius: 10px;
     overflow: hidden;
 }
 
@@ -584,7 +585,7 @@
     font-family: var(--app-font);
     background: var(--bg-card);
     border: 1px solid var(--divider);
-    border-radius: var(--radius-input);
+    border-radius: 10px;
     outline: 0;
 }
 
@@ -605,7 +606,7 @@
     text-align: left;
     background: var(--bg-card);
     border: 1px solid var(--divider);
-    border-radius: var(--radius-input);
+    border-radius: 10px;
     cursor: pointer;
 }
 
@@ -645,9 +646,9 @@
 
 .outline-button,
 .primary-button {
-    min-height: clamp(40px, 9vw, 44px);
+    min-height: 44px;
     padding: 0 clamp(14px, 4vw, 18px);
-    border-radius: var(--radius-btn);
+    border-radius: 10px;
     font-size: clamp(12px, 2.8vw, 13px);
     font-weight: 800;
     text-transform: uppercase;
@@ -687,9 +688,7 @@
         justify-content: center;
     }
 
-    .request-filters {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+    .request-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 
     .expand-btn {
@@ -711,24 +710,26 @@
         flex-direction: column;
     }
 
+}
+
 @media (max-width: 420px) {
     .request-filters {
-        gap: 6px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-control-gap);
     }
 
     .filter-field label {
-        font-size: 9px;
+        font-size: 10px;
     }
 
     .filter-field select,
     .filter-field input {
-        padding-inline: 6px;
-        font-size: 11px;
+        padding-inline: 8px;
+        font-size: 12px;
     }
 }
 
+@media (max-width: 640px) {
     .outline-button,
-    .primary-button {
-        width: 100%;
-    }
+    .primary-button { width: 100%; }
 }

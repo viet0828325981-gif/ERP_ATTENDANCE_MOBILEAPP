@@ -1,4 +1,4 @@
-.bottom-nav{
+﻿.bottom-nav{
     position:fixed;
     bottom:0;
     left:0;
@@ -17,8 +17,3 @@
     cursor:pointer;
 }
 .nav-item.active{ color:var(--accent); }
-
-.manager-bottom-nav {
-    background: #ffffff;
-    box-shadow: 0 -10px 24px rgba(43, 64, 150, 0.08);
-}

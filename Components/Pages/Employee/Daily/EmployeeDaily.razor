@@ -163,7 +163,7 @@
                                     <p class="weekday">@record.WorkDate.ToString("ddd", VietnameseCulture)</p>
                                 </div>
 
-                                <span class="attendance-shift @GetShiftBadgeClass(record.Shift)">@GetShiftLabel(record.Shift)</span>
+                                <span class="attendance-shift @GetShiftBadgeClass(record.Shift)">@GetShiftCodeDisplay(record.Shift)</span>
 
                                 <div class="attendance-times">
                                     <p class="times">@FormatTimeRange(record)</p>
@@ -771,6 +771,12 @@
             "" => "Chưa có ca",
             _ => shiftCode
         };
+    }
+
+    private static string GetShiftCodeDisplay(string shiftCode)
+    {
+        var code = shiftCode.Trim().ToUpperInvariant();
+        return string.IsNullOrWhiteSpace(code) || code == "--" ? "--" : code;
     }
 
     private static string GetShiftBadgeClass(string shiftCode)

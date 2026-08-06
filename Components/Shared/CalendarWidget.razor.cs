@@ -15,7 +15,7 @@ public partial class CalendarWidget : ComponentBase
     protected List<List<DayCell>> Weeks { get; private set; } = new();
 
     protected string MonthName => new DateTime(Year, Month, 1).ToString("MMMM",
-        System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+        System.Globalization.CultureInfo.GetCultureInfo("vi-VN"));
 
     protected override void OnParametersSet()
     {

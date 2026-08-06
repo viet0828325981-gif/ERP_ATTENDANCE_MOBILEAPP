@@ -18,7 +18,7 @@
 <RoleGuard AllowedRole="@ERP_PAYROLLMOBILE.Services.RoleScope.AppRole.Employee">
 <section class="payroll-page">
     <div class="payroll-shell">
-        <p class="payroll-subtitle">Tổng quan bảng lương cá nhân theo tháng @selectedMonth.Month/@selectedMonth.Year</p>
+        <h1 class="page-title">Tổng quan lương tháng @selectedMonth.Month/@selectedMonth.Year</h1>
 
         <div class="payroll-filters">
             <div class="payroll-field">
@@ -111,42 +111,20 @@
             </article>
 
             <article class="payroll-card work-card">
-                <h2 class="section-title">Phân tích ngày công</h2>
+                <h2 class="section-title">Phân tích ngày công & nghỉ phép</h2>
                 <p class="section-sub">Thống kê đầy đủ các mục ngày công trong tháng</p>
 
-                <div class="stat-grid">
-                    <div class="stat-cell">
-                        <div class="num">@FormatDay(Breakdown?.StandardDays)</div>
-                        <div class="lbl">Công chuẩn</div>
-                    </div>
-                    <div class="stat-cell">
-                        <div class="num accent">@FormatDay(Breakdown?.ActualWorkDays)</div>
-                        <div class="lbl">Thực tế</div>
-                    </div>
-                    <div class="stat-cell">
-                        <div class="num">@FormatDay(Breakdown?.EventPaidLeaveDays)</div>
-                        <div class="lbl">ngày nghỉ có lương </div>
-                    </div>
-                    <div class="stat-cell">
-                        <div class="num">@FormatDay(Breakdown?.PaidLeaveDays)</div>
-                        <div class="lbl">nghỉ lễ</div>
-                    </div>
-                    <div class="stat-cell">
-                        <div class="num">@FormatDay(Breakdown?.LeaveUsed)</div>
-                        <div class="lbl">Công phép</div>
-                    </div>
-                    <div class="stat-cell">
-                        <div class="num warn">@FormatDay(Breakdown?.OvertimeDays)</div>
-                        <div class="lbl">Tăng ca</div>
-                    </div>
-                    <div class="stat-cell">
-                        <div class="num">@FormatDay(Breakdown?.WeekendDays)</div>
-                        <div class="lbl">Cuối tuần</div>
-                    </div>
-                    <div class="stat-cell">
-                        <div class="num accent">@FormatDay(Breakdown?.WeightedWorkDays)</div>
-                        <div class="lbl">Quy đổi</div>
-                    </div>
+                <div class="work-analysis-list">
+                    @foreach (var row in WorkAnalysisRows)
+                    {
+                        <div class="work-analysis-row @(row.IsEmphasis ? "emphasis" : null) @(row.IsWarning ? "warning" : null)">
+                            <span class="work-analysis-label">@row.Label</span>
+                            <span class="work-analysis-track" aria-hidden="true">
+                                <span class="work-analysis-fill" style="width: @ClampPercent(row.Percent).ToString("0.##", CultureInfo.InvariantCulture)%"></span>
+                            </span>
+                            <strong class="work-analysis-value">@row.Value</strong>
+                        </div>
+                    }
                 </div>
             </article>
 
@@ -381,18 +359,16 @@
     private string AttendanceDonutStyle => DonutStyle(AttendanceRate);
     private string PaidLeaveDonutStyle => DonutStyle(PaidLeaveRate);
 
-    private IReadOnlyList<BreakdownRow> BreakdownRows => new[]
+    private IReadOnlyList<WorkAnalysisRow> WorkAnalysisRows => new[]
     {
-        new BreakdownRow("Công chuẩn tháng", FormatDay(Breakdown?.StandardDays), 100m, false),
-        new BreakdownRow("Thực tế đi làm", FormatDay(Breakdown?.ActualWorkDays), Percent(Breakdown?.ActualWorkDays ?? 0m, StandardDays), false),
-        new BreakdownRow("Nghỉ lễ có lương", FormatDay(Breakdown?.EventPaidLeaveDays), Percent(Breakdown?.EventPaidLeaveDays ?? 0m, StandardDays), false),
-        new BreakdownRow("Ngày nghỉ có lương", FormatDay(Breakdown?.PaidLeaveDays), Percent(Breakdown?.PaidLeaveDays ?? 0m, StandardDays), false),
-        new BreakdownRow("Công phép", FormatDay(Breakdown?.LeaveUsed), Percent(Breakdown?.LeaveUsed ?? 0m, StandardDays), false),
-        new BreakdownRow("Tăng ca (OT)", FormatDay(Breakdown?.OvertimeDays), Percent(Breakdown?.OvertimeDays ?? 0m, StandardDays), true),
-        new BreakdownRow("Cuối tuần", FormatDay(Breakdown?.WeekendDays), Percent(Breakdown?.WeekendDays ?? 0m, StandardDays), false),
-        new BreakdownRow("Ngày lễ", FormatDay(Breakdown?.HolidayDays), Percent(Breakdown?.HolidayDays ?? 0m, StandardDays), false),
-        new BreakdownRow("Bù công", FormatDay(Breakdown?.MakeupDays), Percent(Breakdown?.MakeupDays ?? 0m, StandardDays), false),
-        new BreakdownRow("Công quy đổi (hệ số)", FormatDay(Breakdown?.WeightedWorkDays), Percent(Breakdown?.WeightedWorkDays ?? 0m, StandardDays), false)
+        new WorkAnalysisRow("Công chuẩn tháng", FormatDay(Breakdown?.StandardDays), 100m, false, true),
+        new WorkAnalysisRow("Số ngày đi làm", FormatDay(Breakdown?.ActualWorkDays), Percent(Breakdown?.ActualWorkDays ?? 0m, StandardDays), false, false),
+        new WorkAnalysisRow("Ngày nghỉ có lương", FormatDay(Breakdown?.EventPaidLeaveDays), Percent(Breakdown?.EventPaidLeaveDays ?? 0m, StandardDays), false, false),
+        new WorkAnalysisRow("Nghỉ lễ", FormatDay(Breakdown?.PaidLeaveDays), Percent(Breakdown?.PaidLeaveDays ?? 0m, StandardDays), false, false),
+        new WorkAnalysisRow("Công phép", FormatDay(Breakdown?.LeaveUsed), Percent(Breakdown?.LeaveUsed ?? 0m, StandardDays), false, false),
+        new WorkAnalysisRow("Tăng ca", FormatDay(Breakdown?.OvertimeDays), Percent(Breakdown?.OvertimeDays ?? 0m, StandardDays), true, false),
+        new WorkAnalysisRow("Cuối tuần", FormatDay(Breakdown?.WeekendDays), Percent(Breakdown?.WeekendDays ?? 0m, StandardDays), false, false),
+        new WorkAnalysisRow("Công quy đổi", FormatDay(Breakdown?.WeightedWorkDays), Percent(Breakdown?.WeightedWorkDays ?? 0m, StandardDays), false, true)
     };
 
     protected override async Task OnInitializedAsync()
@@ -651,5 +627,5 @@
         return value?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? "-";
     }
 
-    private sealed record BreakdownRow(string Label, string Value, decimal Percent, bool IsWarning);
+    private sealed record WorkAnalysisRow(string Label, string Value, decimal Percent, bool IsWarning, bool IsEmphasis);
 }

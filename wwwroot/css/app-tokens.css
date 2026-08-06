@@ -1,33 +1,63 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* Bộ token dùng chung cho toàn bộ giao diện app */
 :root {
     /* Font - dùng duy nhất Inter toàn app */
-    --app-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --app-font: "Inter", "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+    --type-screen-title: 20px;
+    --type-section-title: 17px;
+    --type-card-title: 16px;
+    --type-body: 15px;
+    --type-label: 13px;
+    --type-helper: 12px;
+    --type-stat: 22px;
+    --type-stat-large: 32px;
     /* Text */
-    --text-main: #1c1d21;
-    --text-muted: #8b8f98;
-    --text-shift: #9aa0a8;
+    --text-main: #1C1D21;
+    --text-muted: #8B8F98;
+    --text-shift: #9AA0A8;
     /* Accent chính - indigo đậm, dùng cho: header, nút chính, pill trạng thái,
        link, ngày Chủ nhật, ô ngày được chọn trong lịch */
-    --donut: #bdfff2;
-    --accent: #4338ca;
-    --accent-soft-bg: #e7e5fb;
-    --grad-from: #5b4fe8;
-    --donut: #55b987;
-    --grad-to: #4338ca;
+    --color-primary: #4338CA;
+    --color-primary-dark: #4338CA;
+    --color-primary-mid: #5B4FE8;
+    --color-primary-accent: #4338CA;
+    --color-primary-light: #C7C9F5;
+    --color-primary-pale: #E8E7FC;
+    --color-primary-bg: #EEF2FF;
+    --color-primary-subtle: #FAFBFF;
+    --color-success: #2E7D32;
+    --color-success-bg: #E8F5E9;
+    --color-warning: #E65100;
+    --color-warning-bg: #FFF3E0;
+    --color-danger: #C62828;
+    --color-danger-bg: #FFEBEE;
+    --color-info: #01579B;
+    --color-info-bg: #E1F5FE;
+    --color-gray-100: #F5F5F5;
+    --donut: #55B987;
+    --accent: #4338CA;
+    --accent-soft-bg: #E8E7FC;
+    --grad-from: #5B4FE8;
+    --grad-to: #4338CA;
     /* Trạng thái phụ */
-    --danger: #e2574c;
-    --danger-soft-bg: #fdeceb;
+    --danger: #E2574C;
+    --danger-soft-bg: #FDECEB;
     /* Nền / khung */
-    --bg-page: #FFFF;
-    --bg-card: #ffffff;
-    --divider: #eef0f2;
-    --suggest: #fff4c9:
+    --bg-page: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --divider: #EEF0F2;
+    --suggest: #FFF4C9;
     /* Bán kính bo góc dùng chung - để card/button đồng nhất */
     --radius-card: 10px;
     --radius-btn: 10px;
-    --radius-input: 18px;
+    --radius-input: 10px;
+    --space-page-x: clamp(12px, 4vw, 20px);
+    --space-page-y: clamp(12px, 3vh, 20px);
+    --space-card: clamp(14px, 4vw, 20px);
+    --space-section: clamp(16px, 5vw, 24px);
+    --space-list-gap: clamp(8px, 2.5vw, 14px);
+    --space-control-gap: clamp(8px, 2vw, 12px);
 }
 
 *{ box-sizing: border-box; }
@@ -38,24 +68,31 @@ body{
     background:var(--bg-page);
     font-family:var(--app-font);
     color:var(--text-main);
+    font-size: 15px;
+    line-height: 1.55;
 }
 
 /* Card dùng lại ở nhiều màn hình */
 .app-card{
     background:var(--bg-card);
     border-radius:var(--radius-card);
-    box-shadow:0 10px 30px rgba(20,20,40,0.06);
+    border: 1px solid #F0F0F0;
+    box-shadow:0 2px 12px rgba(0, 0, 0, 0.06);
+    min-width: 0;
 }
 
 /* Nút chính dùng gradient tím */
 .app-btn-primary{
+    min-height: 44px;
     border:none;
     border-radius:var(--radius-btn);
     color:#fff;
     font-family:var(--app-font);
-    font-weight:800;
+    font-size:14px;
+    font-weight:600;
+    line-height:1;
     background:linear-gradient(135deg, var(--grad-from), var(--grad-to));
-    box-shadow:0 10px 20px rgba(67,56,202,0.3);
+    box-shadow:none;
 }
 
 /* Nền thanh header dùng chung */
@@ -66,9 +103,26 @@ body{
 
 /* Label phụ dùng cho form/filter */
 .app-label{
-    font-size:11px;
-    font-weight:700;
+    font-size:var(--type-label);
+    font-weight:500;
+    line-height:1.4;
     color:var(--text-muted);
-    text-transform:uppercase;
-    letter-spacing:.4px;
+    letter-spacing: 0;
+}
+
+button, input, select, textarea {
+    font: inherit;
+}
+
+button, select, input:not([type="checkbox"]):not([type="radio"]), textarea {
+    min-height: 44px;
+}
+
+button, a, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid rgba(67, 56, 202, 0.24);
+    outline-offset: 2px;
 }
