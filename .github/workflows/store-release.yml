@@ -101,6 +101,7 @@ jobs:
           dotnet restore "${PROJECT_FILE}"
           -p:TargetFrameworks=net9.0-android
           -p:TargetFramework=net9.0-android
+          -r android-arm64
 
       - name: Prepare Android signing key
         id: android_signing
@@ -126,6 +127,7 @@ jobs:
           dotnet publish "$PROJECT_FILE" \
             -f net9.0-android \
             -c Release \
+            -r android-arm64 \
             --no-restore \
             -p:TargetFrameworks=net9.0-android \
             -p:ApplicationId="$APP_ID" \
