@@ -22,10 +22,10 @@
         <Nullable>enable</Nullable>
 
         <!-- Display name -->
-        <ApplicationTitle>ERP_PAYROLLMOBILE</ApplicationTitle>
+        <ApplicationTitle>Moon Tính Công</ApplicationTitle>
 
         <!-- App Identifier -->
-		<ApplicationId>com.company.erpemployee</ApplicationId>
+		<ApplicationId>vn.moon.tinhcong</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -83,12 +83,14 @@
       <Folder Include="Components\Features\Payroll\Shared\" />
     </ItemGroup>
 
+	<ItemGroup>
+		<Content Remove="Platforms\Android\google-services.json" />
+	</ItemGroup>
+
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
 		<GoogleServicesJson Include="Platforms\Android\google-services.json" />
-        <PackageReference Include="Xamarin.AndroidX.SavedState.SavedState.Ktx" Version="1.5.0.1" />
-		<PackageReference Include="Xamarin.Firebase.Messaging">
-		  <Version>125.1.0.1</Version>
-		</PackageReference>
+		<!-- Keep Firebase on the AndroidX generation used by .NET MAUI 9. -->
+		<PackageReference Include="Xamarin.Firebase.Messaging" Version="124.1.0.1" />
 	</ItemGroup>
 
 </Project>
