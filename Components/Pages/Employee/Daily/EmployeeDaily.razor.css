@@ -463,7 +463,7 @@
 .attendance-row {
     width: 100%;
     display: grid;
-    grid-template-columns: 58px 56px minmax(0, 1fr) 64px 20px;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 20px;
     align-items: center;
     column-gap: 8px;
     padding: clamp(10px, 2.5vw, 12px) clamp(10px, 3vw, 14px);
@@ -513,7 +513,7 @@
     font-size: clamp(10px, 2.5vw, 11px);
     font-weight: 700;
     white-space: nowrap;
-    justify-self: center;
+    justify-self: start;
 }
 
 .attendance-shift {
@@ -579,8 +579,8 @@
 
 .attendance-work {
     min-width: 0;
-    text-align: right;
-    justify-self: end;
+    text-align: left;
+    justify-self: start;
 }
 
 .attendance-times .times {
@@ -723,10 +723,6 @@
         align-items: flex-start;
     }
 
-    .attendance-status,
-    .attendance-shift {
-        justify-self: center;
-    }
 }
 
 @media (max-width: 420px) {
@@ -740,5 +736,25 @@
 
     .attendance-filters {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 380px) {
+    .attendance-row {
+        grid-template-columns: 50px 50px minmax(82px, 1fr) 44px 16px;
+        column-gap: 4px;
+        padding-inline: 8px;
+    }
+
+    .attendance-status,
+    .attendance-shift {
+        min-height: 28px;
+        padding-inline: 8px;
+        font-size: 10px !important;
+    }
+
+    .attendance-times .times,
+    .attendance-work .work-count {
+        font-size: 11px !important;
     }
 }
