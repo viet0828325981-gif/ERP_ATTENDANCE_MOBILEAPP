@@ -80,6 +80,8 @@
         }
         else
         {
+            <div class="attendance-dashboard">
+                <div class="attendance-overview-column">
             <div class="stats-row">
                 @for (var i = 0; i < SummaryItems.Count; i++)
                 {
@@ -146,6 +148,9 @@
                     </div>
                 }
             </div>
+
+                </div>
+                <div class="attendance-records-column">
 
             @if (currentRecords.Count == 0)
             {
@@ -239,6 +244,8 @@
                     }
                 </ul>
             }
+                </div>
+            </div>
         }
     </div>
 

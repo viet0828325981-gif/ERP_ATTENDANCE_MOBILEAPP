@@ -56,6 +56,7 @@
         }
         else
         {
+            <div class="payroll-summary-grid">
             <div class="salary-row">
                 <article class="salary-chip primary">
                     <div class="salary-label-row">
@@ -109,7 +110,9 @@
                     </div>
                 </div>
             </article>
+            </div>
 
+            <div class="payroll-analysis-grid">
             <article class="payroll-card work-card">
                 <h2 class="section-title">Phân tích ngày công & nghỉ phép</h2>
                 <p class="section-sub">Thống kê đầy đủ các mục ngày công trong tháng</p>
@@ -176,6 +179,7 @@
                         <strong class="payroll-mini-value">@(ShiftSummary?.RemainingShiftCapacity ?? 0)</strong>
                     </div>
                 </article>
+            </div>
             </div>
 
             <article class="payroll-card special-card">

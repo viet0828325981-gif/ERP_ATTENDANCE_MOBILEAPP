@@ -18,7 +18,6 @@ public class MyFirebaseMessagingService : FirebaseMessagingService
     {
         base.OnNewToken(token);
         await SecureStorage.Default.SetAsync(PushNotificationService.FcmTokenStorageKey, token);
-        System.Diagnostics.Debug.WriteLine($"FCM Token của bạn: {token}");
 
         try
         {

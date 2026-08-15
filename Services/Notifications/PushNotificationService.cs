@@ -30,7 +30,6 @@ public sealed class PushNotificationService : IPushNotificationService
         if (!string.IsNullOrWhiteSpace(token))
         {
             await SecureStorage.Default.SetAsync(FcmTokenStorageKey, token);
-            System.Diagnostics.Debug.WriteLine($"FCM Token: {token}");
         }
 
         return token;

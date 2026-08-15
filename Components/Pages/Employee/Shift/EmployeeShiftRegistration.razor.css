@@ -308,6 +308,61 @@
     background: #d8f1df;
 }
 
+@media (min-width: 768px) {
+    .shift-registration-content {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+        grid-template-areas:
+            "subtitle subtitle"
+            "action action"
+            "error error"
+            "calendar details"
+            "calendar overview";
+        align-items: start;
+        gap: var(--space-list-gap) var(--space-section);
+        padding-top: var(--space-page-y);
+    }
+
+    .shift-registration-subtitle {
+        grid-area: subtitle;
+        margin-bottom: 0;
+    }
+
+    .shift-registration-primary-button {
+        grid-area: action;
+        margin-bottom: var(--space-control-gap);
+    }
+
+    .page-error {
+        grid-area: error;
+        margin-bottom: 0;
+    }
+
+    .calendar-section {
+        grid-area: calendar;
+        min-width: 0;
+        margin-bottom: 0;
+    }
+
+    .info-card {
+        grid-area: details;
+        min-width: 0;
+        margin-bottom: 0;
+    }
+
+    .overview-card {
+        grid-area: overview;
+        min-width: 0;
+        margin-bottom: 0;
+    }
+}
+
+@media (min-width: 1180px) {
+    .shift-registration-content {
+        grid-template-columns: minmax(0, 1.5fr) minmax(340px, 0.75fr);
+    }
+}
+
 @media (max-width: 480px) {
     .shift-registration-content {
         padding: clamp(14px, 4vw, 20px) 0 90px;

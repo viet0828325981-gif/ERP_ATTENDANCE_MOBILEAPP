@@ -3,7 +3,6 @@
 @using ERP_PAYROLLMOBILE.Services.Notifications
 @inject IdentityAuthService IdentityAuthService
 @inject MoonAuthenticationStateProvider AuthStateProvider
-@inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject IPushNotificationService PushNotificationService
 @inject MobileTokenRegistrationService MobileTokenRegistrationService
@@ -102,15 +101,11 @@
         try
         {
             var fcmToken = await PushNotificationService.InitializeAsync();
-            await JS.InvokeVoidAsync("alert", $"[FCM DEBUG] Token: {fcmToken ?? "null"}");
-
-            var apiDebugMessage = await MobileTokenRegistrationService.RegisterCurrentEmployeeTokenAsync(fcmToken);
-            await JS.InvokeVoidAsync("alert", $"[API DEBUG] {apiDebugMessage}");
+            await MobileTokenRegistrationService.RegisterCurrentEmployeeTokenAsync(fcmToken);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Không đồng bộ được FCM token sau đăng nhập: {ex.Message}");
-            await JS.InvokeVoidAsync("alert", $"[API DEBUG ERROR] {ex.Message}");
         }
     }
 }

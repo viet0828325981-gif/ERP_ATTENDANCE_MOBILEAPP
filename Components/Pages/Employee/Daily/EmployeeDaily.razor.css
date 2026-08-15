@@ -10,6 +10,12 @@
     padding: clamp(16px, 3vw, 20px) 0 90px;
 }
 
+.attendance-dashboard,
+.attendance-overview-column,
+.attendance-records-column {
+    min-width: 0;
+}
+
 /* Intro + tÃ¬m kiáº¿m */
 .attendance-intro-row {
     display: flex;
@@ -450,6 +456,44 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+@media (min-width: 900px) {
+    .attendance-content {
+        padding-top: var(--space-page-y);
+    }
+
+    .attendance-dashboard {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+        align-items: start;
+        gap: var(--space-section);
+    }
+
+    .attendance-overview-column {
+        position: sticky;
+        top: calc(54px + var(--space-page-y));
+    }
+
+    .stats-row {
+        gap: 10px;
+    }
+
+    .stat-card {
+        min-height: 76px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .attendance-list {
+        gap: 12px;
+    }
+
+    .attendance-row {
+        min-height: 72px;
+        padding: 14px 16px;
+    }
 }
 
 .attendance-card {

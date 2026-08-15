@@ -10,6 +10,11 @@
     padding: clamp(16px, 4vw, 24px) 0 90px;
 }
 
+.payroll-summary-grid,
+.payroll-analysis-grid {
+    min-width: 0;
+}
+
 /* TiÃªu Ä‘á» vÃ  mÃ´ táº£ Ä‘áº§u mÃ n */
 .page-title {
     font-size: clamp(20px, 5vw, 24px);
@@ -555,6 +560,86 @@
     background: #f7f7fb;
     border: 1px solid var(--divider);
     border-radius: 10px;
+}
+
+@media (min-width: 768px) {
+    .payroll-shell {
+        padding-top: var(--space-page-y);
+    }
+
+    .payroll-summary-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+        align-items: stretch;
+        gap: var(--space-section);
+        margin-bottom: var(--space-section);
+    }
+
+    .payroll-summary-grid .salary-row,
+    .payroll-summary-grid .payroll-card {
+        margin-bottom: 0;
+    }
+
+    .payroll-summary-grid .ratio-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .payroll-summary-grid .donut-pair {
+        flex: 1;
+        align-items: center;
+    }
+
+    .payroll-analysis-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+        grid-template-areas:
+            "work badge"
+            "work support";
+        align-items: start;
+        gap: var(--space-control-gap) var(--space-section);
+        margin-bottom: var(--space-section);
+    }
+
+    .payroll-analysis-grid .work-card {
+        grid-area: work;
+        height: 100%;
+        margin-bottom: 0;
+    }
+
+    .payroll-analysis-grid .badge-live {
+        grid-area: badge;
+        justify-self: start;
+        margin-bottom: 0;
+    }
+
+    .payroll-analysis-grid .two-col {
+        grid-area: support;
+        grid-template-columns: 1fr;
+    }
+
+    .payroll-analysis-grid .row-card {
+        margin-bottom: 0;
+    }
+
+    .work-analysis-row {
+        grid-template-columns: minmax(0, 1fr) minmax(120px, 32%) minmax(64px, auto);
+    }
+
+    .work-analysis-track {
+        width: 100%;
+    }
+}
+
+@media (min-width: 1180px) {
+    .payroll-summary-grid,
+    .payroll-analysis-grid {
+        grid-template-columns: minmax(0, 1.55fr) minmax(340px, 0.65fr);
+    }
+
+    .payroll-analysis-grid .two-col {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 640px) {

@@ -77,8 +77,7 @@ namespace ERP_PAYROLLMOBILE
 
                     tokenTask.AddOnCompleteListener(new MyFcmCompleteListener(tcs));
 
-                    string token = await tcs.Task;
-                    await DisplayAlert("FCM Token của bạn", token, "OK");
+                    await tcs.Task;
                 }
                 catch (Exception ex)
                 {
