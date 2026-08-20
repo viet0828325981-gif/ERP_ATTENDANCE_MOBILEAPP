@@ -6,13 +6,19 @@
     background:var(--bg-card);
     border-top:1px solid var(--divider);
     display:flex;
-    justify-content:space-around;
-    padding:12px 0 16px;
+    align-items:center;
+    gap:4px;
+    padding:12px max(8px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
     z-index:10;
 }
 .nav-item{
-    font-size:12px;
+    flex:1 1 0;
+    min-width:0;
+    font-size:clamp(10px, 3vw, 12px);
     font-weight:700;
+    line-height:1.25;
+    text-align:center;
+    white-space:nowrap;
     color:var(--text-muted);
     cursor:pointer;
 }

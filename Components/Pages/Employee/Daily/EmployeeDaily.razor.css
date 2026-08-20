@@ -507,9 +507,14 @@
 .attendance-row {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 20px;
+    grid-template-columns:
+        minmax(44px, 0.8fr)
+        minmax(44px, 0.8fr)
+        minmax(94px, 1.6fr)
+        minmax(42px, 0.8fr)
+        18px;
     align-items: center;
-    column-gap: 8px;
+    column-gap: clamp(4px, 1.5vw, 8px);
     padding: clamp(10px, 2.5vw, 12px) clamp(10px, 3vw, 14px);
     text-align: left;
     background: transparent;
@@ -557,7 +562,7 @@
     font-size: clamp(10px, 2.5vw, 11px);
     font-weight: 700;
     white-space: nowrap;
-    justify-self: start;
+    justify-self: center;
 }
 
 .attendance-shift {
@@ -617,14 +622,16 @@
 
 .attendance-times {
     min-width: 0;
-    text-align: left;
-    justify-self: start;
+    width: 100%;
+    text-align: right;
+    justify-self: stretch;
 }
 
 .attendance-work {
     min-width: 0;
+    width: 100%;
     text-align: left;
-    justify-self: start;
+    justify-self: stretch;
 }
 
 .attendance-times .times {
@@ -785,8 +792,6 @@
 
 @media (max-width: 380px) {
     .attendance-row {
-        grid-template-columns: 50px 50px minmax(82px, 1fr) 44px 16px;
-        column-gap: 4px;
         padding-inline: 8px;
     }
 

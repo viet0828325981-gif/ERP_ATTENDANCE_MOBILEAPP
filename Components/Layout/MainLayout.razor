@@ -6,7 +6,11 @@
 <MudSnackbarProvider />
 
 <div class="page">
-    <NavMenu />
+    <AuthorizeView>
+        <Authorized>
+            <NavMenu />
+        </Authorized>
+    </AuthorizeView>
 
     <div class="layout-shell">
         <main>

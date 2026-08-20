@@ -1,4 +1,3 @@
-@using Microsoft.AspNetCore.Components.Authorization
 @inject MoonAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 
@@ -17,26 +16,7 @@
     </div>
 </header>
 
-<nav class="bottom-nav" aria-label="Employee menu">
-    <div class="bottom-nav-track">
-        @foreach (var item in NavItems)
-        {
-            <NavLink class="nav-item" href="@item.Href" Match="@item.Match">
-                <span class="nav-item-text">@item.Label</span>
-            </NavLink>
-        }
-    </div>
-</nav>
-
 @code {
-    private static readonly IReadOnlyList<(string Label, string Href, NavLinkMatch Match)> NavItems =
-    [
-        ("Chấm công", "/employee/daily", NavLinkMatch.Prefix),
-        ("Yêu cầu", "/yeu-cau", NavLinkMatch.Prefix),
-        ("Đăng ký ca", "/dang-ky-ca", NavLinkMatch.Prefix),
-        ("Lương cơ bản", "/luong-co-ban", NavLinkMatch.Prefix)
-    ];
-
     private void Logout()
     {
         AuthStateProvider.SignOut();
