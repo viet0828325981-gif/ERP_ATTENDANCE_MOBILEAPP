@@ -12,25 +12,23 @@ public sealed class MobileTokenRegistrationService
         this.mobileAppApiClient = mobileAppApiClient;
     }
 
-    public async Task<string> RegisterCurrentEmployeeTokenAsync(string? token, CancellationToken cancellationToken = default)
+    public async Task RegisterCurrentEmployeeTokenAsync(string? token, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(token))
         {
-            return "FCM token rỗng, không gọi API InsertEmployeeMobileTokenAsync.";
+            return;
         }
 
         var employeeId = await SecureStorage.Default.GetAsync(IdentityStorageKeys.EmployeeIdKey);
         if (string.IsNullOrWhiteSpace(employeeId))
         {
-            return "Không có employeeId đăng nhập, không gọi API InsertEmployeeMobileTokenAsync.";
+            return;
         }
 
-        var responseText = await mobileAppApiClient.InsertEmployeeMobileTokenAsync(new EmployeeMobileTokenRequestDto
+        await mobileAppApiClient.InsertEmployeeMobileTokenAsync(new EmployeeMobileTokenRequestDto
         {
             EmployeeId = employeeId,
             Token = token
         }, cancellationToken);
-
-        return $"InsertEmployeeMobileTokenAsync thành công. EmployeeId: {employeeId}. Response: {responseText}";
     }
 }
