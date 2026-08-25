@@ -164,14 +164,7 @@
 
         try
         {
-            if (registrationMode == ShiftRegistrationMode.Week)
-            {
-                await ShiftcodeApiClient.PostShiftRegistrationByWeek(request, CompanyId);
-            }
-            else
-            {
-                await ShiftcodeApiClient.PostShiftRegistrationByMonth(request, CompanyId);
-            }
+            await ShiftcodeApiClient.PostShiftRegistrationAsync(request, CompanyId);
 
             Snackbar.Add("Đăng ký ca thành công.", Severity.Success);
             MudDialog.Close(DialogResult.Ok(true));
@@ -191,38 +184,43 @@
         var request = new ShiftRegistrationCreateModel
         {
             EmployeeId = EmployeeId,
-            Year = SelectedMonth.Year,
-            Month = SelectedMonth.Month,
             CreatedBy = string.IsNullOrWhiteSpace(CreatedBy) ? EmployeeId : CreatedBy,
-            WeekStartDate = registrationMode == ShiftRegistrationMode.Week
-                ? weekStartDate
-                : new DateOnly(SelectedMonth.Year, SelectedMonth.Month, 1),
-            Note = note
+            Note = note,
+            Days = registrationMode == ShiftRegistrationMode.Week
+                ? BuildWeekItems()
+                : BuildMonthItems()
         };
 
-        if (registrationMode == ShiftRegistrationMode.Week)
-        {
-            request.MonShiftCode = weekShiftSelections[0].Value;
-            request.TueShiftCode = weekShiftSelections[1].Value;
-            request.WedShiftCode = weekShiftSelections[2].Value;
-            request.ThuShiftCode = weekShiftSelections[3].Value;
-            request.FriShiftCode = weekShiftSelections[4].Value;
-            request.SatShiftCode = weekShiftSelections[5].Value;
-            request.SunShiftCode = weekShiftSelections[6].Value;
-        }
-        else
-        {
-            request.ShiftCode = monthShiftCode;
-            request.MonShiftCode = monthShiftCode;
-            request.TueShiftCode = monthShiftCode;
-            request.WedShiftCode = monthShiftCode;
-            request.ThuShiftCode = monthShiftCode;
-            request.FriShiftCode = monthShiftCode;
-            request.SatShiftCode = monthShiftCode;
-            request.SunShiftCode = includeSundayForMonth ? monthShiftCode : null;
-        }
-
         return request;
+    }
+
+    private IReadOnlyList<ShiftRegistrationCreateItemModel> BuildWeekItems()
+    {
+        return weekShiftSelections
+            .Select((selection, dayOffset) => new { selection.Value, WorkDate = weekStartDate.AddDays(dayOffset) })
+            .Where(item => !string.IsNullOrWhiteSpace(item.Value))
+            .Select(item => new ShiftRegistrationCreateItemModel
+            {
+                WorkDate = item.WorkDate,
+                ShiftCode = item.Value!.Trim()
+            })
+            .ToList();
+    }
+
+    private IReadOnlyList<ShiftRegistrationCreateItemModel> BuildMonthItems()
+    {
+        var shiftCode = monthShiftCode!.Trim();
+        var daysInMonth = DateTime.DaysInMonth(SelectedMonth.Year, SelectedMonth.Month);
+
+        return Enumerable.Range(1, daysInMonth)
+            .Select(day => new DateOnly(SelectedMonth.Year, SelectedMonth.Month, day))
+            .Where(workDate => includeSundayForMonth || workDate.DayOfWeek != DayOfWeek.Sunday)
+            .Select(workDate => new ShiftRegistrationCreateItemModel
+            {
+                WorkDate = workDate,
+                ShiftCode = shiftCode
+            })
+            .ToList();
     }
 
     private void Cancel()

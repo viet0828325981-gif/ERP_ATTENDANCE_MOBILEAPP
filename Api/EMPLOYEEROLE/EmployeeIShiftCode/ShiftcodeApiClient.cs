@@ -32,14 +32,17 @@ public sealed class ShiftcodeApiClient
         return DeserializeShiftDays(responseText);
     }
 
-    public async Task<string> PostShiftRegistrationByWeek(ShiftRegistrationCreateModel shiftRegistrationCreateModel, Guid companyId)
+    public async Task<string> PostShiftRegistrationAsync(ShiftRegistrationCreateModel request, Guid companyId)
     {
-        return await PostShiftRegistrationAsync($"GetShiftCode/ByWeek?companyId={companyId}", shiftRegistrationCreateModel, "ByWeek");
-    }
+        var response = await http.PostAsJsonAsync($"employeerole/shift-registration?companyId={companyId}", request);
+        var responseText = await response.Content.ReadAsStringAsync();
 
-    public async Task<string> PostShiftRegistrationByMonth(ShiftRegistrationCreateModel shiftRegistrationCreateModel, Guid companyId)
-    {
-        return await PostShiftRegistrationAsync($"GetShiftCode/ByMonth?companyId={companyId}", shiftRegistrationCreateModel, "ByMonth");
+        if (response.IsSuccessStatusCode)
+        {
+            return responseText;
+        }
+
+        throw new Exception($"Không lưu được đăng ký ca: {responseText}");
     }
 
     public async Task<ShiftRegistrationOverviewModel> GetShiftRegistrationOverviewAsync(Guid companyId, string employeeId, int month, int year)
@@ -72,25 +75,6 @@ public sealed class ShiftcodeApiClient
 
         return new ShiftRegistrationOverviewModel();
     }
-
-
-
-    private async Task<string> PostShiftRegistrationAsync(string relativeUrl, ShiftRegistrationCreateModel request, string operationName)
-    {
-        var response = await http.PostAsJsonAsync(relativeUrl, request);
-        var responseText = await response.Content.ReadAsStringAsync();
-
-        if (response.IsSuccessStatusCode)
-        {
-            return responseText;
-        }
-
-        throw new Exception($"Không lưu được đăng ký ca: {responseText}");
-    }
-
-
-    
-
     private static IReadOnlyList<ShiftRegistrationDayModel> DeserializeShiftDays(string responseText)
     {
         if (string.IsNullOrWhiteSpace(responseText))
