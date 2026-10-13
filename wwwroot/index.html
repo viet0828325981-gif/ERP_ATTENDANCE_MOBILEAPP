@@ -18,7 +18,12 @@
 
     <div class="status-bar-safe-area"></div>
 
-    <div id="app">Loading...</div>
+    <div id="app">
+        <div class="app-startup-loading" data-app-startup>
+            <strong>Đang tải ứng dụng...</strong>
+            <span>Vui lòng chờ trong giây lát.</span>
+        </div>
+    </div>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
@@ -28,6 +33,28 @@
 
     <script src="_framework/blazor.webview.js" autostart="false"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script>
+        window.setTimeout(function () {
+            const startupMarker = document.querySelector('[data-app-startup]');
+            if (!startupMarker || !startupMarker.isConnected) {
+                return;
+            }
+
+            startupMarker.classList.add('app-startup-failed');
+            startupMarker.replaceChildren();
+
+            const title = document.createElement('strong');
+            title.textContent = 'Ứng dụng chưa thể khởi động';
+
+            const message = document.createElement('span');
+            message.textContent = 'Hãy đóng ứng dụng, mở lại và thử thêm một lần.';
+
+            const errorCode = document.createElement('small');
+            errorCode.textContent = 'Mã lỗi: APP-BOOT-001';
+
+            startupMarker.append(title, message, errorCode);
+        }, 12000);
+    </script>
 
 </body>
 

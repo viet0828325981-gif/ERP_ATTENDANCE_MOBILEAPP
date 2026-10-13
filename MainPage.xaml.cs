@@ -17,9 +17,8 @@ namespace ERP_PAYROLLMOBILE
             InitializeComponent();
             this.pullToRefreshService = pullToRefreshService;
 
-#if DEBUG && WINDOWS
+            blazorWebView.BlazorWebViewInitializing += OnBlazorWebViewInitializing;
             blazorWebView.BlazorWebViewInitialized += OnBlazorWebViewInitialized;
-#endif
         }
 
         private async void OnRefreshing(object? sender, EventArgs e)
@@ -37,15 +36,22 @@ namespace ERP_PAYROLLMOBILE
             }
         }
 
-#if DEBUG && WINDOWS
+        private static void OnBlazorWebViewInitializing(object? sender, BlazorWebViewInitializingEventArgs e)
+        {
+            Console.WriteLine("[BlazorWebView] Initializing.");
+        }
+
         private static void OnBlazorWebViewInitialized(object? sender, BlazorWebViewInitializedEventArgs e)
         {
+            Console.WriteLine($"[BlazorWebView] Initialized with platform view '{e.WebView?.GetType().FullName ?? "unknown"}'.");
+
+#if DEBUG && WINDOWS
             if (e.WebView is WebView2 webView)
             {
                 webView.CoreWebView2.OpenDevToolsWindow();
             }
-        }
 #endif
+        }
 
         // ==========================================
         // ĐOẠN MÃ XIN QUYỀN THÔNG BÁO ANDROID 

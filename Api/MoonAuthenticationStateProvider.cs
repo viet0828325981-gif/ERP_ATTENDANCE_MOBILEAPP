@@ -1,14 +1,32 @@
 using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Logging;
 
 namespace ERP_PAYROLLMOBILE.Api;
 
 public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvider
 {
     private static readonly ClaimsPrincipal Anonymous = new(new ClaimsIdentity());
+    private static readonly TimeSpan RestoreTimeout = TimeSpan.FromSeconds(8);
+    private static readonly string[] StorageKeys =
+    [
+        IdentityStorageKeys.UserIdKey,
+        IdentityStorageKeys.EmployeeIdKey,
+        IdentityStorageKeys.CompanyIdKey,
+        IdentityStorageKeys.RoleKey,
+        IdentityStorageKeys.JwtKey,
+        IdentityStorageKeys.ExpiresUtcKey
+    ];
+
     private readonly SemaphoreSlim syncRoot = new(1, 1);
+    private readonly ILogger<MoonAuthenticationStateProvider> logger;
     private AuthenticationState? cachedState;
+
+    public MoonAuthenticationStateProvider(ILogger<MoonAuthenticationStateProvider> logger)
+    {
+        this.logger = logger;
+    }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
@@ -22,7 +40,7 @@ public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvide
         {
             if (cachedState is null)
             {
-                var principal = await GetCurrentPrincipalAsync();
+                var principal = await RestorePrincipalOrAnonymousAsync();
                 cachedState = new AuthenticationState(principal);
             }
 
@@ -38,12 +56,22 @@ public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvide
     {
         var expiresUtc = DateTimeOffset.UtcNow.Add(rememberMe ? TimeSpan.FromDays(7) : TimeSpan.FromHours(8));
 
-        await SecureStorage.Default.SetAsync(IdentityStorageKeys.UserIdKey, userId);
-        await SecureStorage.Default.SetAsync(IdentityStorageKeys.EmployeeIdKey, employeeId);
-        await SecureStorage.Default.SetAsync(IdentityStorageKeys.CompanyIdKey, companyId.ToString());
-        await SecureStorage.Default.SetAsync(IdentityStorageKeys.RoleKey, role ?? string.Empty);
-        await SecureStorage.Default.SetAsync(IdentityStorageKeys.JwtKey, jwt);
-        await SecureStorage.Default.SetAsync(IdentityStorageKeys.ExpiresUtcKey, expiresUtc.ToString("O", CultureInfo.InvariantCulture));
+        try
+        {
+            await SecureStorage.Default.SetAsync(IdentityStorageKeys.UserIdKey, userId);
+            await SecureStorage.Default.SetAsync(IdentityStorageKeys.EmployeeIdKey, employeeId);
+            await SecureStorage.Default.SetAsync(IdentityStorageKeys.CompanyIdKey, companyId.ToString());
+            await SecureStorage.Default.SetAsync(IdentityStorageKeys.RoleKey, role ?? string.Empty);
+            await SecureStorage.Default.SetAsync(IdentityStorageKeys.JwtKey, jwt);
+            await SecureStorage.Default.SetAsync(IdentityStorageKeys.ExpiresUtcKey, expiresUtc.ToString("O", CultureInfo.InvariantCulture));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Không thể lưu phiên đăng nhập vào SecureStorage.");
+            Console.Error.WriteLine($"[Authentication] SecureStorage write failed: {ex}");
+            ClearStoredIdentity();
+            throw new InvalidOperationException("Thiết bị không thể lưu phiên đăng nhập an toàn. Vui lòng thử lại.", ex);
+        }
 
         var state = new AuthenticationState(CreatePrincipal(userId, employeeId, companyId, jwt, role));
         cachedState = state;
@@ -52,16 +80,32 @@ public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvide
 
     public void SignOut()
     {
-        SecureStorage.Default.Remove(IdentityStorageKeys.UserIdKey);
-        SecureStorage.Default.Remove(IdentityStorageKeys.EmployeeIdKey);
-        SecureStorage.Default.Remove(IdentityStorageKeys.CompanyIdKey);
-        SecureStorage.Default.Remove(IdentityStorageKeys.RoleKey);
-        SecureStorage.Default.Remove(IdentityStorageKeys.JwtKey);
-        SecureStorage.Default.Remove(IdentityStorageKeys.ExpiresUtcKey);
+        ClearStoredIdentity();
 
         var state = new AuthenticationState(Anonymous);
         cachedState = state;
         NotifyAuthenticationStateChanged(Task.FromResult(state));
+    }
+
+    private async Task<ClaimsPrincipal> RestorePrincipalOrAnonymousAsync()
+    {
+        try
+        {
+            return await GetCurrentPrincipalAsync().WaitAsync(RestoreTimeout);
+        }
+        catch (TimeoutException ex)
+        {
+            logger.LogError(ex, "Quá thời gian khôi phục phiên đăng nhập. Tiếp tục với trạng thái chưa đăng nhập.");
+            Console.Error.WriteLine($"[Authentication] Session restore timed out: {ex}");
+            return Anonymous;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Không thể khôi phục phiên đăng nhập. Tiếp tục với trạng thái chưa đăng nhập.");
+            Console.Error.WriteLine($"[Authentication] Session restore failed: {ex}");
+            ClearStoredIdentity();
+            return Anonymous;
+        }
     }
 
     private static async Task<ClaimsPrincipal> GetCurrentPrincipalAsync()
@@ -79,12 +123,7 @@ public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvide
             || !Guid.TryParse(companyIdText, out var companyId)
             || IsExpired(expiresUtcText))
         {
-            SecureStorage.Default.Remove(IdentityStorageKeys.UserIdKey);
-            SecureStorage.Default.Remove(IdentityStorageKeys.EmployeeIdKey);
-            SecureStorage.Default.Remove(IdentityStorageKeys.CompanyIdKey);
-            SecureStorage.Default.Remove(IdentityStorageKeys.RoleKey);
-            SecureStorage.Default.Remove(IdentityStorageKeys.JwtKey);
-            SecureStorage.Default.Remove(IdentityStorageKeys.ExpiresUtcKey);
+            ClearStoredIdentity();
             return Anonymous;
         }
 
@@ -115,5 +154,20 @@ public sealed class MoonAuthenticationStateProvider : AuthenticationStateProvide
         }
 
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "MoonIdentity"));
+    }
+
+    private static void ClearStoredIdentity()
+    {
+        foreach (var key in StorageKeys)
+        {
+            try
+            {
+                SecureStorage.Default.Remove(key);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[Authentication] SecureStorage remove failed for '{key}': {ex}");
+            }
+        }
     }
 }

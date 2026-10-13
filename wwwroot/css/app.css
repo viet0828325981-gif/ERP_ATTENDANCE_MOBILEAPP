@@ -7,6 +7,35 @@ html, body {
     -webkit-text-size-adjust: 100%;
 }
 
+.app-startup-loading,
+.app-startup-error {
+    min-height: 100vh;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    color: #4338ca;
+    background: #fff;
+}
+
+.app-startup-loading span,
+.app-startup-error p,
+.app-startup-error small {
+    color: #666;
+}
+
+.app-startup-failed,
+.app-startup-error {
+    color: #b42318;
+}
+
+.app-startup-error .btn {
+    min-width: 140px;
+}
+
 /* Màu mặc định cho link và nút dạng link */
 a, .btn-link {
     color: #006bb7;

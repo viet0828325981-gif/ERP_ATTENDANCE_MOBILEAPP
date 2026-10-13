@@ -1,17 +1,29 @@
-﻿<CascadingAuthenticationState>
-    <Router AppAssembly="@typeof(MauiProgram).Assembly">
-        <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
-                <NotAuthorized>
-                    <RedirectToLogin />
-                </NotAuthorized>
-            </AuthorizeRouteView>
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-        </Found>
-        <NotFound>
-            <LayoutView Layout="@typeof(Layout.MainLayout)">
-                <h1>Không tìm thấy trang</h1>
-            </LayoutView>
-        </NotFound>
-    </Router>
-</CascadingAuthenticationState>
+<ErrorBoundary>
+    <ChildContent>
+        <CascadingAuthenticationState>
+            <Router AppAssembly="@typeof(MauiProgram).Assembly">
+                <Found Context="routeData">
+                    <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
+                        <NotAuthorized>
+                            <RedirectToLogin />
+                        </NotAuthorized>
+                    </AuthorizeRouteView>
+                    <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                </Found>
+                <NotFound>
+                    <LayoutView Layout="@typeof(Layout.MainLayout)">
+                        <h1>Không tìm thấy trang</h1>
+                    </LayoutView>
+                </NotFound>
+            </Router>
+        </CascadingAuthenticationState>
+    </ChildContent>
+    <ErrorContent>
+        <main class="app-startup-error" role="alert">
+            <h1>Không thể khởi động ứng dụng</h1>
+            <p>Đã xảy ra lỗi khi tải phiên đăng nhập. Hãy đóng ứng dụng rồi mở lại.</p>
+            <button class="btn btn-primary" type="button" onclick="window.location.reload()">Thử lại</button>
+            <small>Mã lỗi: APP-BOOT-002</small>
+        </main>
+    </ErrorContent>
+</ErrorBoundary>
